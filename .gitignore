@@ -1,0 +1,8 @@
+.vscode/*
+build.*
+kill_qemu.sh
+run.sh
+kernel8.img
+log.txt
+qemu.log
+.clang-format

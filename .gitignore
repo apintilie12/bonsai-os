@@ -1,5 +1,5 @@
 .vscode/*
-build.*
+build/*
 kill_qemu.sh
 run.sh
 kernel8.img

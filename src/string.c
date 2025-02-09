@@ -1,6 +1,11 @@
 #include "string.h"
 
 void itoa (unsigned long val, char *buf) {
+    if(val == 0) {
+        *buf = '0';
+        *(buf+1) = 0;
+        return;
+    }
     char d;
     char *p = buf;
     while (val > 0)

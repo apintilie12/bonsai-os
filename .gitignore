@@ -1,5 +1,8 @@
 .vscode/*
 build/*
+build-native/*
+test-src/*
+test.exe
 kill_qemu.sh
 run.sh
 kernel8.img

@@ -3,6 +3,11 @@
 void itoa (unsigned long val, char *buf) {
     char d;
     char *p = buf;
+    if(val == 0) {
+        *buf = '0';
+        *(buf+1) = 0;
+        return;
+    }
     while (val > 0)
     {
        d = val % 10;

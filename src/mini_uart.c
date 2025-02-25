@@ -59,3 +59,9 @@ void mini_uart_set_baudrate(unsigned int baudrate) {
     put32(AUX_MU_BAUD_REG, baudrate_reg);  // Set baudrate
     put32(AUX_MU_CNTL_REG, 3);             // Enable RX and TX
 }
+
+// This function is required by printf function
+void putc ( void* p, char c)
+{
+	mini_uart_send(c);
+}

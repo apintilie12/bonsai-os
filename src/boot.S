@@ -24,11 +24,8 @@ master:
 	mov sp, #LOW_MEMORY
 	bl kernel_init
 
-	bl print_el
-	b proc_hang
-
-	ldr	x0, =SCTLR_VALUE_MMU_DISABLED
-	msr	sctlr_el2, x0		
+	//ldr	x0, =SCTLR_VALUE_MMU_DISABLED
+	//msr	sctlr_el2, x0		
 
 	ldr	x0, =HCR_VALUE
 	msr	hcr_el2, x0

@@ -2,15 +2,16 @@
 #include "printf.h"
 #include "utils.h"
 
+void print_el(void) {
+    int el = get_el();
+    printf("Exception level: %d\r\n", el);
+}
+
 void kernel_init(void) {
     mini_uart_init();
     init_printf(0, putc);
     mini_uart_set_baudrate(9600);
-}
-
-void print_el(void) {
-    int el = get_el();
-    printf("Exception level: %d\r\n", el);
+    print_el();
 }
 
 void kernel_main(void) {

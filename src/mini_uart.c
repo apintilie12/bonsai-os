@@ -2,6 +2,7 @@
 
 #include "peripherals/gpio.h"
 #include "utils.h"
+#include "printf.h"
 
 void mini_uart_send(char c) {
     while (1) {
@@ -45,7 +46,9 @@ void mini_uart_init(void) {
           1);  // Enable mini uart (this also enables access to its registers)
     put32(AUX_MU_CNTL_REG, 0);    // Disable auto flow control and disable
                                   // receiver and transmitter (for now)
-    put32(AUX_MU_IER_REG, 0);     // Disable receive and transmit interrupts
+    // put32(AUX_MU_IER_REG, 0);     // Disable receive and transmit interrupts
+    put32(AUX_MU_IER_REG, 1);     // Enable read interrupts and disable transmit interrupts
+    put32(AUX_MU_IIR_REG, 2);     // Clear receive FIFO
     put32(AUX_MU_LCR_REG, 3);     // Enable 8 bit mode
     put32(AUX_MU_MCR_REG, 0);     // Set RTS line to be always high
     put32(AUX_MU_BAUD_REG, 270);  // Set baud rate to 115200
@@ -64,4 +67,10 @@ void mini_uart_set_baudrate(unsigned int baudrate) {
 void putc ( void* p, char c)
 {
 	mini_uart_send(c);
+}
+
+void mini_uart_handle_irq(void) {
+    char in =(char) get32(AUX_MU_IO_REG) & 0xFF;
+    put32(AUX_MU_IIR_REG, 2);     // Clear receive FIFO
+    printf("MiniUART IRQ triggered by char: %c\r\n", in);
 }

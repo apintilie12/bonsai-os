@@ -11,9 +11,10 @@ void kernel_main(void) {
     timer_init();
     enable_interrupt_controller();
     enable_irq();
-    
+   
+    printf("Kernel initialization finished\r\n");
     while(1) {
-        mini_uart_send(mini_uart_recv());
+        // mini_uart_send(mini_uart_recv());
     }
     
 }

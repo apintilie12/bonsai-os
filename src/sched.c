@@ -1,6 +1,9 @@
 #include "sched.h"
 #include "irq.h"
 #include "printf.h"
+#include "fork.h"
+#include "utils.h"
+#include "mm.h"
 
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
@@ -23,6 +26,7 @@ void _schedule(void)
 	preempt_disable();
 	int next,c;
 	struct task_struct * p;
+	// printf("Current task is %s\r\n", current -> name);
 	while (1) {
 		c = -1;
 		next = 0;
@@ -43,7 +47,8 @@ void _schedule(void)
 			}
 		}
 	}
-	switch_to(task[next]);
+	// printf("Next task is %s\r\n", task[next] -> name);
+	switch_to(task[next], next);
 	preempt_enable();
 }
 
@@ -53,7 +58,7 @@ void schedule(void)
 	_schedule();
 }
 
-void switch_to(struct task_struct * next) 
+void switch_to(struct task_struct * next, int index) 
 {
 	if (current == next) 
 		return;
@@ -77,4 +82,19 @@ void timer_tick()
 	enable_irq();
 	_schedule();
 	disable_irq();
+}
+
+void exit_process(){
+	preempt_disable();
+	for (int i = 0; i < NR_TASKS; i++){
+		if (task[i] == current) {
+			task[i]->state = TASK_ZOMBIE;
+			break;
+		}
+	}
+	if (current->stack) {
+		free_page(current->stack);
+	}
+	preempt_enable();
+	schedule();
 }

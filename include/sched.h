@@ -13,6 +13,7 @@
 #define LAST_TASK task[NR_TASKS-1]
 
 #define TASK_RUNNING				0
+#define TASK_NAME_MAX_LEN 			64
 
 extern struct task_struct *current;
 extern struct task_struct * task[NR_TASKS];
@@ -40,6 +41,7 @@ struct task_struct {
 	long counter;
 	long priority;
 	long preempt_count;
+	char name[TASK_NAME_MAX_LEN];
 };
 
 extern void sched_init(void);
@@ -51,8 +53,9 @@ extern void switch_to(struct task_struct* next);
 extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 
 #define INIT_TASK \
-/*cpu_context*/	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-/* state etc */	0,0,1, 0 \
+/* cpu_context */	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
+/* state etc   */	0,0,1, 0, \
+/* name        */	"main-thread" \
 }
 
 #endif

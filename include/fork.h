@@ -14,10 +14,9 @@
 #define PSR_MODE_EL3t	0x0000000c
 #define PSR_MODE_EL3h	0x0000000d
 
-int copy_process(unsigned long clone_flags, long fn, unsigned long arg, unsigned long stack, const char *name);
-int move_to_user_mode(unsigned long pc);
-
-struct pt_regs *task_pt_regs(struct task_struct *tsk);
+int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, const char *name);
+int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc);
+struct pt_regs * task_pt_regs(struct task_struct *tsk);
 
 struct pt_regs {
 	unsigned long regs[31];

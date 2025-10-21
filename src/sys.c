@@ -3,26 +3,18 @@
 #include "utils.h"
 #include "sched.h"
 #include "mm.h"
-#include "sys.h"
+
 
 void sys_write(char * buf){
 	printf(buf);
 }
 
-int sys_clone(unsigned long stack){
-	return copy_process(0, 0, 0, stack, "some-name");
-}
-
-unsigned long sys_malloc(){
-	unsigned long addr = get_free_page();
-	if (!addr) {
-		return -1;
-	}
-	return addr;
+int sys_fork(){
+	return copy_process(0, 0, 0, "some-name");
 }
 
 void sys_exit(){
 	exit_process();
 }
 
-void * const sys_call_table[] = {sys_write, sys_malloc, sys_clone, sys_exit};
+void * const sys_call_table[] = {sys_write, sys_fork, sys_exit};

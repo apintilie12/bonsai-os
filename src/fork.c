@@ -3,14 +3,16 @@
 #include "entry.h"
 #include "printf.h"
 #include "fork.h"
+#include "utils.h"
+#include "list.h"
 
 int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, const char *name)
 {
 	preempt_disable();
-	struct task_struct *p;
+	TASK_STRUCT *p;
 
 	unsigned long page = allocate_kernel_page();
-	p = (struct task_struct *) page;
+	p = (TASK_STRUCT*) page;
 	struct pt_regs *childregs = task_pt_regs(p);
 
 	if (!p)
@@ -35,7 +37,8 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 	p->cpu_context.pc = (unsigned long)ret_from_fork;
 	p->cpu_context.sp = (unsigned long)childregs;
 	int pid = nr_tasks++;
-	task[pid] = p;	
+	// task[pid] = p;	
+	list_add(&global_all_threads_list, &p->all_threads_list);
 
 	preempt_enable();
 	return pid;
@@ -57,7 +60,7 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
 	return 0;
 }
 
-struct pt_regs *task_pt_regs(struct task_struct *tsk)
+struct pt_regs *task_pt_regs(TASK_STRUCT *tsk)
 {
 	unsigned long p = (unsigned long)tsk + THREAD_SIZE - sizeof(struct pt_regs);
 	return (struct pt_regs *)p;

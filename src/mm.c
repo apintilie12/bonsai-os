@@ -11,7 +11,7 @@ unsigned long allocate_kernel_page() {
 	return page + VA_START;
 }
 
-unsigned long allocate_user_page(struct task_struct *task, unsigned long va) {
+unsigned long allocate_user_page(TASK_STRUCT *task, unsigned long va) {
 	unsigned long page = get_free_page();
 	if (page == 0) {
 		return 0;
@@ -59,7 +59,7 @@ unsigned long map_table(unsigned long *table, unsigned long shift, unsigned long
 	return table[index] & PAGE_MASK;
 }
 
-void map_page(struct task_struct *task, unsigned long va, unsigned long page){
+void map_page(TASK_STRUCT *task, unsigned long va, unsigned long page){
 	unsigned long pgd;
 	if (!task->mm.pgd) {
 		task->mm.pgd = get_free_page();
@@ -80,12 +80,12 @@ void map_page(struct task_struct *task, unsigned long va, unsigned long page){
 		task->mm.kernel_pages[++task->mm.kernel_pages_count] = pte;
 	}
 	map_table_entry((unsigned long *)(pte + VA_START), va, page);
-	struct user_page p = {page, va};
+	USER_PAGE p = {page, va};
 	task->mm.user_pages[task->mm.user_pages_count++] = p;
 }
 
-int copy_virt_memory(struct task_struct *dst) {
-	struct task_struct* src = current;
+int copy_virt_memory(TASK_STRUCT *dst) {
+	TASK_STRUCT* src = current;
 	for (int i = 0; i < src->mm.user_pages_count; i++) {
 		unsigned long kernel_va = allocate_user_page(dst, src->mm.user_pages[i].virt_addr);
 		if( kernel_va == 0) {

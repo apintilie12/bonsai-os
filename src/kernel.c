@@ -30,6 +30,7 @@ void kernel_main()
 	init_printf(NULL, putc);
 	irq_vector_init();
 	timer_init();
+	sched_init();
 	enable_interrupt_controller();
 	enable_irq();
 

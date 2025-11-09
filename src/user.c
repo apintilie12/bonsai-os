@@ -24,9 +24,9 @@ void user_process()
 		return;
 	}
 	if (pid == 0){
-		loop("abcde");
+		loop("abcde\r\n");
 	} else {
-		loop("12345");
+		loop("12345\r\n");
 	}
 }
 

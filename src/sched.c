@@ -4,10 +4,18 @@
 #include "utils.h"
 #include "mm.h"
 
-static struct task_struct init_task = INIT_TASK;
-struct task_struct *current = &(init_task);
-struct task_struct * task[NR_TASKS] = {&(init_task), };
+static TASK_STRUCT init_task = INIT_TASK;
+TASK_STRUCT *current = &(init_task);
+TASK_STRUCT * task[NR_TASKS] = {&(init_task), };
+LIST_ENTRY global_all_threads_list;
 int nr_tasks = 1;
+
+
+void sched_init(void) 
+{
+	list_head_init(&global_all_threads_list);
+	list_add_tail(&global_all_threads_list, &(init_task.all_threads_list));
+}
 
 void preempt_disable(void)
 {
@@ -23,29 +31,29 @@ void preempt_enable(void)
 void _schedule(void)
 {
 	preempt_disable();
-	int next,c;
-	struct task_struct * p;
+	// int next,c;
+	int c;
+	TASK_STRUCT *next;
+	TASK_STRUCT *p;
 	while (1) {
 		c = -1;
 		next = 0;
-		for (int i = 0; i < NR_TASKS; i++){
-			p = task[i];
+		LIST_FOR_EACH_ENTRY(p, &global_all_threads_list, all_threads_list) {
 			if (p && p->state == TASK_RUNNING && p->counter > c) {
 				c = p->counter;
-				next = i;
+				next = p;
 			}
 		}
 		if (c) {
 			break;
 		}
-		for (int i = 0; i < NR_TASKS; i++) {
-			p = task[i];
+		LIST_FOR_EACH_ENTRY(p, &global_all_threads_list, all_threads_list) {
 			if (p) {
 				p->counter = (p->counter >> 1) + p->priority;
 			}
 		}
 	}
-	switch_to(task[next]);
+	switch_to(next);
 	preempt_enable();
 }
 
@@ -56,11 +64,11 @@ void schedule(void)
 }
 
 
-void switch_to(struct task_struct * next) 
+void switch_to(TASK_STRUCT *next) 
 {
 	if (current == next) 
 		return;
-	struct task_struct * prev = current;
+	TASK_STRUCT *prev = current;
 	current = next;
 	set_pgd(next->mm.pgd);
 	cpu_switch_to(prev, next);
@@ -85,9 +93,10 @@ void timer_tick()
 
 void exit_process(){
 	preempt_disable();
-	for (int i = 0; i < NR_TASKS; i++){
-		if (task[i] == current) {
-			task[i]->state = TASK_ZOMBIE;
+	TASK_STRUCT *p;
+	LIST_FOR_EACH_ENTRY(p, &global_all_threads_list, all_threads_list) {
+		if (p == current) {
+			p->state = TASK_ZOMBIE;
 			break;
 		}
 	}

@@ -6,7 +6,6 @@
 
 static TASK_STRUCT init_task = INIT_TASK;
 TASK_STRUCT *current = &(init_task);
-TASK_STRUCT * task[NR_TASKS] = {&(init_task), };
 LIST_ENTRY global_all_threads_list;
 int nr_tasks = 1;
 
@@ -31,7 +30,6 @@ void preempt_enable(void)
 void _schedule(void)
 {
 	preempt_disable();
-	// int next,c;
 	int c;
 	TASK_STRUCT *next;
 	TASK_STRUCT *p;

@@ -9,11 +9,6 @@
 
 #define THREAD_SIZE				4096
 
-#define NR_TASKS				64 
-
-#define FIRST_TASK task[0]
-#define LAST_TASK task[NR_TASKS-1]
-
 #define TASK_RUNNING				0
 #define TASK_ZOMBIE					1
 
@@ -67,7 +62,6 @@ typedef struct _TASK_STRUCT {
 extern LIST_ENTRY global_all_threads_list;
 
 extern TASK_STRUCT *current;
-extern TASK_STRUCT * task[NR_TASKS];
 extern int nr_tasks;
 
 

@@ -1,8 +1,8 @@
 ARMGNU ?= aarch64-linux-gnu
 
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
+COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -g
 TOPS = -Wall -Iinclude -g
-ASMOPS = -Iinclude 
+ASMOPS = -Iinclude -g
 
 BUILD_DIR = build
 BUILD_NATIVE_DIR = build-native
@@ -14,7 +14,6 @@ all : kernel8.img
 clean :
 	rm -rf $(BUILD_DIR) *.img 
 	rm -rf $(BUILD_NATIVE_DIR)
-	rm test.exe
 
 $(BUILD_NATIVE_DIR)/%_c.o : $(TEST_SRC_DIR)/%.c
 	mkdir -p $(@D)
@@ -45,6 +44,3 @@ NATIVE_DEP_FILES = $(NATIVE_OBJ_FILES:%.o=%.d)
 kernel8.img: $(SRC_DIR)/linker.ld $(OBJ_FILES)
 	$(ARMGNU)-ld -T $(SRC_DIR)/linker.ld -o $(BUILD_DIR)/kernel8.elf  $(OBJ_FILES)
 	$(ARMGNU)-objcopy $(BUILD_DIR)/kernel8.elf -O binary kernel8.img
-
-test : $(NATIVE_OBJ_FILES)
-	gcc $(NATIVE_OBJ_FILES) -o test.exe

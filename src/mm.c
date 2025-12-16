@@ -1,8 +1,10 @@
 #include "mm.h"
 #include "arm/mmu.h"
 #include "sched.h"
+#include "spinlock.h"
 
 static unsigned short mem_map [ PAGING_PAGES ] = {0,};
+static spinlock_t mem_map_lock = SPINLOCK_INIT;
 
 unsigned long allocate_kernel_page() {
 	unsigned long page = get_free_page();
@@ -23,19 +25,24 @@ unsigned long allocate_user_page(TASK_STRUCT *task, unsigned long va) {
 
 unsigned long get_free_page()
 {
+	spin_lock(&mem_map_lock);
 	for (int i = 0; i < PAGING_PAGES; i++){
 		if (mem_map[i] == 0){
 			mem_map[i] = 1;
+			spin_unlock(&mem_map_lock);
 			unsigned long page = LOW_MEMORY + i*PAGE_SIZE;
 			memzero(page + VA_START, PAGE_SIZE);
 			return page;
 		}
 	}
+	spin_unlock(&mem_map_lock);
 	return 0;
 }
 
 void free_page(unsigned long p){
+	spin_lock(&mem_map_lock);
 	mem_map[(p - LOW_MEMORY) / PAGE_SIZE] = 0;
+	spin_unlock(&mem_map_lock);
 }
 
 void map_table_entry(unsigned long *pte, unsigned long va, unsigned long pa) {

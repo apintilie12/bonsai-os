@@ -38,7 +38,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 	p->cpu_context.sp = (unsigned long)childregs;
 	int pid = nr_tasks++;
 	// task[pid] = p;	
-	list_add(&global_all_threads_list, &p->all_threads_list);
+	add_task(p);
 
 	preempt_enable();
 	return pid;

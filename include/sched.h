@@ -87,6 +87,7 @@ extern void preempt_enable(void);
 extern void switch_to(TASK_STRUCT* next);
 extern void cpu_switch_to(TASK_STRUCT* prev, TASK_STRUCT* next);
 extern void exit_process(void);
+extern void add_task(TASK_STRUCT* task);
 
 #define INIT_TASK \
 /* cpu_context */	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \

@@ -3,11 +3,13 @@
 #include "printf.h"
 #include "utils.h"
 #include "mm.h"
+#include "spinlock.h"
 
 static TASK_STRUCT init_task = INIT_TASK;
 CPU_INFO cpu_data[4];
 LIST_ENTRY global_all_threads_list;
 int nr_tasks = 1;
+static spinlock_t sched_lock = SPINLOCK_INIT;
 
 
 void sched_init(void) 
@@ -19,6 +21,12 @@ void sched_init(void)
 
 	list_head_init(&global_all_threads_list);
 	list_add_tail(&global_all_threads_list, &(init_task.all_threads_list));
+}
+
+void add_task(TASK_STRUCT *task) {
+	spin_lock(&sched_lock);
+	list_add_tail(&global_all_threads_list, &task->all_threads_list);
+	spin_unlock(&sched_lock);
 }
 
 void preempt_disable(void)
@@ -39,6 +47,7 @@ void _schedule(void)
 	int c;
 	TASK_STRUCT *next;
 	TASK_STRUCT *p;
+	spin_lock(&sched_lock);
 	while (1) {
 		c = -1;
 		next = 0;
@@ -57,6 +66,7 @@ void _schedule(void)
 			}
 		}
 	}
+	spin_unlock(&sched_lock);
 	switch_to(next);
 	preempt_enable();
 }
@@ -103,12 +113,14 @@ void exit_process(){
 	preempt_disable();
 	TASK_STRUCT *p;
 	TASK_STRUCT *current = get_current_task();
+	spin_lock(&sched_lock);
 	LIST_FOR_EACH_ENTRY(p, &global_all_threads_list, all_threads_list) {
 		if (p == current) {
 			p->state = TASK_ZOMBIE;
 			break;
 		}
 	}
+	spin_unlock(&sched_lock);
 	preempt_enable();
 	schedule();
 }

@@ -10,10 +10,13 @@
 #define SCTLR_EOE_LITTLE_ENDIAN         (0 << 24)
 #define SCTLR_I_CACHE_DISABLED          (0 << 12)
 #define SCTLR_D_CACHE_DISABLED          (0 << 2)
+#define SCTLR_I_CACHE_ENABLED           (1 << 12)
+#define SCTLR_D_CACHE_ENABLED           (1 << 2)
 #define SCTLR_MMU_DISABLED              (0 << 0)
 #define SCTLR_MMU_ENABLED               (1 << 0)
 
 #define SCTLR_VALUE_MMU_DISABLED	(SCTLR_RESERVED | SCTLR_EE_LITTLE_ENDIAN | SCTLR_I_CACHE_DISABLED | SCTLR_D_CACHE_DISABLED | SCTLR_MMU_DISABLED)
+#define SCTLR_VALUE_MMU_ENABLED		(SCTLR_RESERVED | SCTLR_EE_LITTLE_ENDIAN | SCTLR_I_CACHE_ENABLED | SCTLR_D_CACHE_ENABLED | SCTLR_MMU_ENABLED)
 
 // ***************************************
 // HCR_EL2, Hypervisor Configuration Register (EL2), Page 1923 of AArch64-Reference-Manual.
@@ -37,7 +40,7 @@
 
 #define SPSR_MASK_ALL 			(7 << 6)
 #define SPSR_EL1h			(5 << 0)
-#define SPSR_VALUE			(SPSR_MASK_ALL | SPSR_EL1h)
+#define SPSR_VALUE_EL1			(SPSR_MASK_ALL | SPSR_EL1h)
 
 // ***************************************
 // ESR_EL1, Exception Syndrome Register (EL1). Page 1899 of AArch64-Reference-Manual.

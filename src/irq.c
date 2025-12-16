@@ -51,7 +51,7 @@ void handle_irq(void)
 		handle_timer_irq();
 	}
 	// Check Legacy GPU Interrupts (Bit 8)
-	else if (src & 0x100) {
+	if (src & 0x100) {
 		unsigned int irq = get32(IRQ_PENDING_1);
 		if (irq & AUX_INT_IRQ) {
 			mini_uart_handle_irq();

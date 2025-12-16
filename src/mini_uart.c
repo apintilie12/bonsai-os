@@ -70,7 +70,11 @@ void putc ( void* p, char c)
 }
 
 void mini_uart_handle_irq(void) {
-    char in =(char) get32(AUX_MU_IO_REG) & 0xFF;
-    put32(AUX_MU_IIR_REG, 2);     // Clear receive FIFO
-    printf("MiniUART IRQ triggered by char: %c\r\n", in);
+    // char in =(char) get32(AUX_MU_IO_REG) & 0xFF;
+    // put32(AUX_MU_IIR_REG, 2);     // Clear receive FIFO
+    // printf("MiniUART IRQ triggered by char: %c\r\n", in);
+    while (get32(AUX_MU_LSR_REG) & 0x01) {
+        char in = (char) get32(AUX_MU_IO_REG) & 0xFF;
+        printf("MiniUART IRQ triggered by char: %c\r\n", in);
+    }
 }

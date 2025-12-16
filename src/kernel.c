@@ -10,6 +10,7 @@
 #include "mini_uart.h"
 #include "sys.h"
 #include "user.h"
+#include "spinlock.h"
 
 
 void kernel_process(){
@@ -23,6 +24,18 @@ void kernel_process(){
 	} 
 }
 
+void test_spinlock(void) {
+	spinlock_t lock = SPINLOCK_INIT;
+	
+	printf("Testing spinlock...\r\n");
+	
+	spin_lock(&lock);
+	printf("  Lock acquired (Critical Section)\r\n");
+	spin_unlock(&lock);
+	
+	printf("  Lock released. Test Passed!\r\n");
+}
+
 
 void kernel_main()
 {
@@ -33,6 +46,8 @@ void kernel_main()
 	sched_init();
 	enable_interrupt_controller();
 	enable_irq();
+
+	test_spinlock();
 
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0, "kernel-thread");
 	if (res < 0) {

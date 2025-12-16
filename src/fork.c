@@ -10,7 +10,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 {
 	preempt_disable();
 	TASK_STRUCT *p;
-
+	TASK_STRUCT *current = get_current_task();
 	unsigned long page = allocate_kernel_page();
 	p = (TASK_STRUCT*) page;
 	struct pt_regs *childregs = task_pt_regs(p);
@@ -47,6 +47,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 
 int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
 {
+	TASK_STRUCT *current = get_current_task();
 	struct pt_regs *regs = task_pt_regs(current);
 	regs->pstate = PSR_MODE_EL0t;
 	regs->pc = pc;

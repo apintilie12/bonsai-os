@@ -1,5 +1,6 @@
 #include "mm.h"
 #include "arm/mmu.h"
+#include "sched.h"
 
 static unsigned short mem_map [ PAGING_PAGES ] = {0,};
 
@@ -85,7 +86,7 @@ void map_page(TASK_STRUCT *task, unsigned long va, unsigned long page){
 }
 
 int copy_virt_memory(TASK_STRUCT *dst) {
-	TASK_STRUCT* src = current;
+	TASK_STRUCT* src = get_current_task();
 	for (int i = 0; i < src->mm.user_pages_count; i++) {
 		unsigned long kernel_va = allocate_user_page(dst, src->mm.user_pages[i].virt_addr);
 		if( kernel_va == 0) {
@@ -99,6 +100,7 @@ int copy_virt_memory(TASK_STRUCT *dst) {
 static int ind = 1;
 
 int do_mem_abort(unsigned long addr, unsigned long esr) {
+	TASK_STRUCT *current = get_current_task();
 	unsigned long dfs = (esr & 0b111111);
 	if ((dfs & 0b111100) == 0b100) {
 		unsigned long page = get_free_page();

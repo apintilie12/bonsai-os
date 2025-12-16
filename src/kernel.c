@@ -55,6 +55,9 @@ void kernel_main()
 		return;
 	}
 
+	CPU_INFO * cpu_info = get_cpu_info();
+	printf("Core %d started\r\n", cpu_info->cpu_id);
+
 	while (1){
 		schedule();
 	}	

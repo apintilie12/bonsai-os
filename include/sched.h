@@ -59,9 +59,23 @@ typedef struct _TASK_STRUCT {
 	LIST_ENTRY all_threads_list;
 } TASK_STRUCT;
 
+typedef struct _CPU_INFO {
+	TASK_STRUCT *current_task;
+	int cpu_id;
+} CPU_INFO;
+
 extern LIST_ENTRY global_all_threads_list;
 
-extern TASK_STRUCT *current;
+static inline CPU_INFO* get_cpu_info(void) {
+	CPU_INFO *ci;
+	asm volatile("mrs %0, tpidr_el1" : "=r"(ci));
+	return ci;
+}
+
+static inline TASK_STRUCT* get_current_task(void) {
+	return get_cpu_info()->current_task;
+}
+
 extern int nr_tasks;
 
 

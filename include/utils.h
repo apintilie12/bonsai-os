@@ -7,5 +7,8 @@ extern unsigned int get32 ( unsigned long );
 extern unsigned long get_el ( void );
 extern void set_pgd(unsigned long pgd);
 extern unsigned long get_pgd();
+extern unsigned long get_cntfrq(void);
+extern void write_cntp_tval(unsigned long);
+extern void write_cntp_ctl(unsigned long);
 
 #endif  /*_UTILS_H */

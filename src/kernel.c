@@ -41,11 +41,18 @@ void kernel_main()
 {
 	mini_uart_init();
 	init_printf(NULL, putc);
+	printf("UART enabled\r\n");
 	irq_vector_init();
+	printf("IRQ vector initialized\r\n");
 	timer_init();
+	printf("Timer initialized\r\n");
 	sched_init();
+	printf("Scheduler initialized\r\n");
 	enable_interrupt_controller();
+	printf("Interrupt controller enabled\r\n");
 	enable_irq();
+	printf("Interrupts enabled\r\n");
+
 
 	test_spinlock();
 

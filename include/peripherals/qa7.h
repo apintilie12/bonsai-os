@@ -12,6 +12,12 @@
 #define CORE2_TIMER_IRQCNTL (QA7_BASE + 0x48)
 #define CORE3_TIMER_IRQCNTL (QA7_BASE + 0x4C)
 
+/* Core Interrupt Source */
+#define CORE0_IRQ_SOURCE    (QA7_BASE + 0x60)
+#define CORE1_IRQ_SOURCE    (QA7_BASE + 0x64)
+#define CORE2_IRQ_SOURCE    (QA7_BASE + 0x68)
+#define CORE3_IRQ_SOURCE    (QA7_BASE + 0x6C)
+
 /* Core Mailboxes (for IPIs) */
 /// Core 0
 #define CORE0_MBOX_INT_CNTL     (QA7_BASE + 0x50)

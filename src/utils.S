@@ -37,3 +37,17 @@ get_pgd:
 	ldr x0, [x1]
 	ret
 
+.globl get_cntfrq
+get_cntfrq:
+	mrs x0, cntfrq_el0
+	ret
+
+.globl write_cntp_tval
+write_cntp_tval:
+	msr cntp_tval_el0, x0
+	ret
+
+.globl write_cntp_ctl
+write_cntp_ctl:
+	msr cntp_ctl_el0, x0
+	ret

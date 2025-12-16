@@ -3,6 +3,7 @@
 #include "timer.h"
 #include "entry.h"
 #include "peripherals/irq.h"
+#include "peripherals/qa7.h"
 #include "mini_uart.h"
 
 const char *entry_error_messages[] = {
@@ -29,8 +30,11 @@ const char *entry_error_messages[] = {
 
 void enable_interrupt_controller()
 {
-	put32(ENABLE_IRQS_1, SYSTEM_TIMER_IRQ_1);
+	// Enable Mini UART (Legacy)
     put32(ENABLE_IRQS_1, AUX_INT_IRQ);
+
+	// Enable Core 0 Timer (QA7) - Bit 1: nCNTPNSIRQ (Non-Secure Physical Timer)
+	put32(CORE0_TIMER_IRQCNTL, 0x2);
 }
 
 void show_invalid_entry_message(int type, unsigned long esr, unsigned long address)
@@ -40,22 +44,19 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
 
 void handle_irq(void)
 {
-	unsigned int irq = get32(IRQ_PENDING_1);
-	// switch (irq) {
-	// 	case (SYSTEM_TIMER_IRQ_1):
-	// 		// handle_timer_irq();
-	// 		break;
-    //     case (AUX_INT_IRQ):
-    //         printf("MiniUART IRQ Triggered\r\n");
-    //         break;
-	// 	default:
-	// 		printf("Unknown pending irq: %x\r\n", irq);
-	// }
-    if(irq & SYSTEM_TIMER_IRQ_1) {
-        handle_timer_irq();
-    } else if (irq & AUX_INT_IRQ) {
-        mini_uart_handle_irq();
-    } else {
-		printf("Unknown pending irq: %x\r\n", irq);
-    }
+	unsigned int src = get32(CORE0_IRQ_SOURCE);
+
+	// Check Local Timer Interrupt (Bit 1: nCNTPNSIRQ)
+	if (src & 0x2) {
+		handle_timer_irq();
+	}
+	// Check Legacy GPU Interrupts (Bit 8)
+	else if (src & 0x100) {
+		unsigned int irq = get32(IRQ_PENDING_1);
+		if (irq & AUX_INT_IRQ) {
+			mini_uart_handle_irq();
+		} else {
+			printf("Unknown pending irq: %x\r\n", irq);
+		}
+	}
 }

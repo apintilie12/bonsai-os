@@ -1,22 +1,29 @@
 #include "utils.h"
 #include "printf.h"
 #include "sched.h"
-#include "peripherals/timer.h"
 
-const unsigned int interval = 200000;
-unsigned int curVal = 0;
+#define HZ 100
+#define CNTP_CTL_ENABLE 1
 
-void timer_init ( void )
+static unsigned int interval = 0;
+
+void timer_init(void)
 {
-	curVal = get32(TIMER_CLO);
-	curVal += interval;
-	put32(TIMER_C1, curVal);
+	unsigned long frq = get_cntfrq();
+	
+	// Sanity check: If uninitialized, default to standard RPi frequency (19.2MHz)
+	if (frq == 0) {
+		frq = 19200000;
+	}
+	printf("Timer frequency: %u Hz\r\n", frq);
+
+	interval = frq / HZ;
+	write_cntp_tval(interval);
+	write_cntp_ctl(CNTP_CTL_ENABLE);
 }
 
-void handle_timer_irq( void ) 
+void handle_timer_irq(void) 
 {
-	curVal += interval;
-	put32(TIMER_C1, curVal);
-	put32(TIMER_CS, TIMER_CS_M1);
+	write_cntp_tval(interval);
 	timer_tick();
 }

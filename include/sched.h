@@ -64,6 +64,9 @@ typedef struct _CPU_INFO {
 	int cpu_id;
 } CPU_INFO;
 
+extern CPU_INFO cpu_data[4];
+
+
 extern LIST_ENTRY global_all_threads_list;
 
 static inline CPU_INFO* get_cpu_info(void) {

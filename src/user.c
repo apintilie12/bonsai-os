@@ -6,7 +6,7 @@ void loop(char* str)
 {
 	char buf[2] = {""};
 	while (1){
-		for (int i = 0; i < 5; i++){
+		for (int i = 0; str[i] != '\0'; i++){
 			buf[0] = str[i];
 			call_sys_write(buf);
 			user_delay(500000);
@@ -24,9 +24,8 @@ void user_process()
 		return;
 	}
 	if (pid == 0){
-		loop("abcde\r\n");
+		loop("abcde");
 	} else {
-		loop("12345\r\n");
+		loop("12345");
 	}
 }
-

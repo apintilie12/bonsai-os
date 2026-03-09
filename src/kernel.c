@@ -37,10 +37,14 @@ void test_spinlock(void) {
 }
 
 
+volatile int uart_ready = 0;
+
 void kernel_main()
 {
 	mini_uart_init();
 	init_printf(NULL, putc);
+	uart_ready = 1;
+	asm volatile("dsb ish" ::: "memory");
 	printf("UART enabled\r\n");
 	irq_vector_init();
 	printf("IRQ vector initialized\r\n");
@@ -68,4 +72,28 @@ void kernel_main()
 	while (1){
 		schedule();
 	}	
+}
+
+void secondary_start(void) {
+	mini_uart_send('S'); // Probe A: reached secondary_start
+
+	// Get CPU ID directly from the register, before tpidr_el1 is valid
+	unsigned long cpu_id;
+	asm volatile("mrs %0, mpidr_el1" : "=r"(cpu_id));
+	cpu_id &= 0xFF;
+
+	cpu_data[cpu_id].cpu_id = cpu_id;
+	asm volatile("msr tpidr_el1, %0" :: "r"(&cpu_data[cpu_id]));
+	irq_vector_init();
+
+	mini_uart_send('W'); // Probe B: about to enter uart_ready loop
+	while (!uart_ready) {
+	}
+	mini_uart_send('G'); // Probe C: exited uart_ready loop
+
+	CPU_INFO * cpu_info = get_cpu_info();
+	printf("Core %d started\r\n", cpu_info->cpu_id);
+	while (1) {
+
+	}
 }

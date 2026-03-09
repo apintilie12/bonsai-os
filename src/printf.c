@@ -20,6 +20,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "printf.h"
+#include "spinlock.h"
+#include "irq.h"
 
 typedef void (*putcf) (void*,char);
 static putcf stdout_putf;
@@ -208,12 +210,24 @@ void init_printf(void* putp,void (*putf) (void*,char))
     stdout_putp=putp;
     }
 
+
+static spinlock_t printf_lock = SPINLOCK_INIT;
+
 void tfp_printf(char *fmt, ...)
     {
     va_list va;
+    unsigned long flags;
+
+    asm volatile("mrs %0, daif" : "=r"(flags));
+    disable_irq();
+    spin_lock(&printf_lock);
+
     va_start(va,fmt);
     tfp_format(stdout_putp,stdout_putf,fmt,va);
     va_end(va);
+
+    spin_unlock(&printf_lock);
+    asm volatile("msr daif, %0" :: "r"(flags));
     }
 
 static void putcp(void* p,char c)

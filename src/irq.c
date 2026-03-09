@@ -39,7 +39,10 @@ void enable_interrupt_controller()
 
 void show_invalid_entry_message(int type, unsigned long esr, unsigned long address)
 {
-	printf("%s, ESR: %x, address: %x\r\n", entry_error_messages[type], esr, address);
+	unsigned long mpidr;
+	asm volatile("mrs %0, mpidr_el1" : "=r"(mpidr));
+	int cpu_id = mpidr & 0xFF;
+	printf("Core %d: %s, ESR: %x, address: %x\r\n", cpu_id, entry_error_messages[type], esr, address);
 }
 
 void handle_irq(void)

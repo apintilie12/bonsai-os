@@ -4,13 +4,15 @@
 
 void loop(char* str)
 {
-	char buf[2] = {""};
+	// char buf[2] = {""};
 	while (1){
-		for (int i = 0; str[i] != '\0'; i++){
-			buf[0] = str[i];
-			call_sys_write(buf);
-			user_delay(500000);
-		}
+		// for (int i = 0; str[i] != '\0'; i++){
+		// 	buf[0] = str[i];
+		// 	call_sys_write(buf);
+		// 	user_delay(500000);
+		// }
+		call_sys_write(str);
+		user_delay(50000000);
 	}
 }
 
@@ -24,8 +26,8 @@ void user_process()
 		return;
 	}
 	if (pid == 0){
-		loop("abcde");
+		loop("abcde\n\r");
 	} else {
-		loop("12345");
+		loop("12345\n\r");
 	}
 }

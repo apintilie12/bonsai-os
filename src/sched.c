@@ -6,6 +6,7 @@
 #include "spinlock.h"
 
 static TASK_STRUCT init_task = INIT_TASK;
+static TASK_STRUCT idle_tasks[4]; // [0] unused; cores 1-3 use [1..3]
 CPU_INFO cpu_data[4];
 LIST_ENTRY global_all_threads_list;
 int nr_tasks = 1;
@@ -21,6 +22,28 @@ void sched_init(void)
 
 	list_head_init(&global_all_threads_list);
 	list_add_tail(&global_all_threads_list, &(init_task.all_threads_list));
+}
+
+void sched_init_secondary(int cpu_id)
+{
+	TASK_STRUCT *idle = &idle_tasks[cpu_id];
+	idle->state = TASK_RUNNING;
+	idle->counter = 1;
+	idle->priority = 1;
+	idle->preempt_count = 0;
+	idle->flags = PF_KTHREAD;
+	idle->on_cpu = cpu_id;
+	idle->mm.pgd = 0;
+
+	const char *prefix = "idle-";
+	int i;
+	for (i = 0; prefix[i]; i++)
+		idle->name[i] = prefix[i];
+	idle->name[i] = '0' + cpu_id;
+	idle->name[i+1] = '\0';
+
+	cpu_data[cpu_id].current_task = idle;
+	// Not added to global_all_threads_list — idle tasks are core-local only
 }
 
 void add_task(TASK_STRUCT *task) {
@@ -52,7 +75,7 @@ void _schedule(void)
 		c = -1;
 		next = 0;
 		LIST_FOR_EACH_ENTRY(p, &global_all_threads_list, all_threads_list) {
-			if (p && p->state == TASK_RUNNING && p->counter > c) {
+			if (p && p->state == TASK_RUNNING && p->on_cpu == -1 && p->counter > c) {
 				c = p->counter;
 				next = p;
 			}
@@ -67,7 +90,9 @@ void _schedule(void)
 		}
 	}
 	spin_unlock(&sched_lock);
-	switch_to(next);
+	if (next) {
+		switch_to(next);
+	}
 	preempt_enable();
 }
 
@@ -78,13 +103,15 @@ void schedule(void)
 }
 
 
-void switch_to(TASK_STRUCT *next) 
+void switch_to(TASK_STRUCT *next)
 {
 	TASK_STRUCT* current = get_current_task();
 	if (current == next)
 		return;
 	TASK_STRUCT *prev = current;
 
+	current->on_cpu = -1;
+	next->on_cpu = get_cpu_info()->cpu_id;
 	get_cpu_info()->current_task = next;
 
 	set_pgd(next->mm.pgd);

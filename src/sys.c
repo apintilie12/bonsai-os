@@ -1,12 +1,12 @@
 #include "fork.h"
-#include "printf.h"
+#include "log.h"
 #include "utils.h"
 #include "sched.h"
 #include "mm.h"
 
 
 void sys_write(char * buf){
-	printf(buf);
+	LOG_CORE("%s", buf);
 }
 
 int sys_fork(){

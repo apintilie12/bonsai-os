@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "printf.h"
+#include "log.h"
 #include "utils.h"
 #include "timer.h"
 #include "irq.h"
@@ -13,31 +13,53 @@
 #include "spinlock.h"
 
 
+void demo_task_a(void) {
+	while (1) {
+		LOG_CORE("demo-a running\r\n");
+		delay(500000);
+	}
+}
+
+void demo_task_b(void) {
+	while (1) {
+		LOG_CORE("demo-b running\r\n");
+		delay(500000);
+	}
+}
+
+void demo_task_c(void) {
+	while (1) {
+		LOG_CORE("demo-c running\r\n");
+		delay(500000);
+	}
+}
+
 void kernel_process(){
-	printf("Kernel process started. EL %d\r\n", get_el());
+	LOG_CORE("Kernel process started. EL %d\r\n", get_el());
 	unsigned long begin = (unsigned long)&user_begin;
 	unsigned long end = (unsigned long)&user_end;
 	unsigned long process = (unsigned long)&user_process;
 	int err = move_to_user_mode(begin, end - begin, process - begin);
 	if (err < 0){
-		printf("Error while moving process to user mode\n\r");
-	} 
+		LOG_CORE("Error while moving process to user mode\r\n");
+	}
 }
 
 void test_spinlock(void) {
 	spinlock_t lock = SPINLOCK_INIT;
-	
-	printf("Testing spinlock...\r\n");
-	
+
+	LOG_CORE("Testing spinlock...\r\n");
+
 	spin_lock(&lock);
-	printf("  Lock acquired (Critical Section)\r\n");
+	LOG_CORE("  Lock acquired (Critical Section)\r\n");
 	spin_unlock(&lock);
-	
-	printf("  Lock released. Test Passed!\r\n");
+
+	LOG_CORE("  Lock released. Test Passed!\r\n");
 }
 
 
 volatile int uart_ready = 0;
+volatile int sched_ready = 0;
 
 void kernel_main()
 {
@@ -45,29 +67,33 @@ void kernel_main()
 	init_printf(NULL, putc);
 	uart_ready = 1;
 	asm volatile("dsb ish" ::: "memory");
-	printf("UART enabled\r\n");
+	LOG_CORE("UART enabled\r\n");
 	irq_vector_init();
-	printf("IRQ vector initialized\r\n");
+	LOG_CORE("IRQ vector initialized\r\n");
 	timer_init();
-	printf("Timer initialized\r\n");
+	LOG_CORE("Timer initialized\r\n");
 	sched_init();
-	printf("Scheduler initialized\r\n");
+	sched_ready = 1;
+	asm volatile("dsb ish" ::: "memory");
+	LOG_CORE("Scheduler initialized\r\n");
 	enable_interrupt_controller();
-	printf("Interrupt controller enabled\r\n");
+	LOG_CORE("Interrupt controller enabled\r\n");
 	enable_irq();
-	printf("Interrupts enabled\r\n");
-
+	LOG_CORE("Interrupts enabled\r\n");
 
 	test_spinlock();
 
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0, "kernel-thread");
 	if (res < 0) {
-		printf("error while starting kernel process");
+		LOG_CORE("Error while starting kernel process\r\n");
 		return;
 	}
 
-	CPU_INFO * cpu_info = get_cpu_info();
-	printf("Core %d started\r\n", cpu_info->cpu_id);
+	copy_process(PF_KTHREAD, (unsigned long)&demo_task_a, 0, "demo-a");
+	copy_process(PF_KTHREAD, (unsigned long)&demo_task_b, 0, "demo-b");
+	copy_process(PF_KTHREAD, (unsigned long)&demo_task_c, 0, "demo-c");
+
+	LOG_CORE("Entering idle loop\r\n");
 
 	while (1){
 		schedule();
@@ -90,10 +116,17 @@ void secondary_start(void) {
 	while (!uart_ready) {
 	}
 	mini_uart_send('G'); // Probe C: exited uart_ready loop
+	while (!sched_ready) {
+	}
 
-	CPU_INFO * cpu_info = get_cpu_info();
-	printf("Core %d started\r\n", cpu_info->cpu_id);
+	sched_init_secondary(cpu_id);
+
+	timer_init();
+	enable_core_timer_irq(cpu_id);
+	enable_irq();
+
+	LOG_CORE("Entering idle loop\r\n");
 	while (1) {
-
+		schedule();
 	}
 }

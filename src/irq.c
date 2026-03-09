@@ -28,13 +28,17 @@ const char *entry_error_messages[] = {
 	"ERROR_INVALID_EL0_32"	
 };
 
+void enable_core_timer_irq(int cpu_id)
+{
+	// Bit 1: nCNTPNSIRQ (Non-Secure Physical Timer)
+	put32(CORE0_TIMER_IRQCNTL + (cpu_id * 4), 0x2);
+}
+
 void enable_interrupt_controller()
 {
-	// Enable Mini UART (Legacy)
-    put32(ENABLE_IRQS_1, AUX_INT_IRQ);
-
-	// Enable Core 0 Timer (QA7) - Bit 1: nCNTPNSIRQ (Non-Secure Physical Timer)
-	put32(CORE0_TIMER_IRQCNTL, 0x2);
+	// Enable Mini UART (Legacy IRQ, routed to core 0 only)
+	put32(ENABLE_IRQS_1, AUX_INT_IRQ);
+	enable_core_timer_irq(0);
 }
 
 void show_invalid_entry_message(int type, unsigned long esr, unsigned long address)
@@ -47,7 +51,9 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
 
 void handle_irq(void)
 {
-	unsigned int src = get32(CORE0_IRQ_SOURCE);
+	unsigned long mpidr;
+	asm volatile("mrs %0, mpidr_el1" : "=r"(mpidr));
+	unsigned int src = get32(CORE0_IRQ_SOURCE + ((mpidr & 0xFF) * 4));
 
 	// Check Local Timer Interrupt (Bit 1: nCNTPNSIRQ)
 	if (src & 0x2) {

@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "printf.h"
+#include "log.h"
 #include "sched.h"
 
 #define HZ 100
@@ -15,7 +15,7 @@ void timer_init(void)
 	if (frq == 0) {
 		frq = 19200000;
 	}
-	printf("Timer frequency: %u Hz\r\n", frq);
+	LOG_CORE("Timer frequency: %u Hz\r\n", frq);
 
 	interval = frq / HZ;
 	write_cntp_tval(interval);

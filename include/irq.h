@@ -2,6 +2,7 @@
 #define	_IRQ_H
 
 void enable_interrupt_controller( void );
+void enable_core_timer_irq(int cpu_id);
 
 void irq_vector_init( void );
 void enable_irq( void );

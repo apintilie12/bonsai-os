@@ -31,6 +31,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 	p->priority = current->priority;
 	p->state = TASK_RUNNING;
 	p->counter = p->priority;
+	p->on_cpu = -1;
 	sprintf(p->name, "%s", name);
 	p->preempt_count = 1; //disable preemtion until schedule_tail
 

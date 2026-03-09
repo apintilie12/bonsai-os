@@ -49,11 +49,12 @@ typedef struct _MM_STRUCT {
 
 typedef struct _TASK_STRUCT {
 	CPU_CONTEXT cpu_context;
-	long state;	
+	long state;
 	long counter;
 	long priority;
 	long preempt_count;
 	unsigned long flags;
+	int on_cpu;		// -1 = not currently running, 0-3 = running on that core
 	MM_STRUCT mm;
 	char name[TASK_NAME_MAX_LEN];
 	LIST_ENTRY all_threads_list;
@@ -91,10 +92,12 @@ extern void switch_to(TASK_STRUCT* next);
 extern void cpu_switch_to(TASK_STRUCT* prev, TASK_STRUCT* next);
 extern void exit_process(void);
 extern void add_task(TASK_STRUCT* task);
+extern void sched_init_secondary(int cpu_id);
 
 #define INIT_TASK \
 /* cpu_context */	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 /* state etc   */	0,0,15,0,PF_KTHREAD, \
+/* on_cpu      */	0, \
 /* mm */			{0, 0, {{0}}, 0, {0}}, \
 /* name        */	"main-thread" \
 }

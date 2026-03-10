@@ -12,6 +12,7 @@
 #include "kernel/user.h"
 #include "lib/spinlock.h"
 #include "tests/test_ring_buf.h"
+#include "kernel/console.h"
 
 #define DEMO_DELAY 50000000
 
@@ -43,12 +44,12 @@ void demo_task_d(void) {
 	}
 }
 
-void echo_task(void) {
-	char c;
+void readline_test_task(void) {
+	char buf[CONSOLE_LINE_MAX];
 	while (1) {
-		if (uart_buf_pop(&c)) {
-			mini_uart_send(c);
-		}
+		printf("> ");
+		console_readline(buf, CONSOLE_LINE_MAX);
+		printf("got: [%s]\r\n", buf);
 	}
 }
 
@@ -110,7 +111,7 @@ void kernel_main()
 		return;
 	}
 
-	copy_process(PF_KTHREAD, (unsigned long)&echo_task, 0, "echo");
+	copy_process(PF_KTHREAD, (unsigned long)&readline_test_task, 0, "readline-test");
 	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_a, 0, "demo-a");
 	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_b, 0, "demo-b");
 	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_c, 0, "demo-c");

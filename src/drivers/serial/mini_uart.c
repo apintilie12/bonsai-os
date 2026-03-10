@@ -4,14 +4,22 @@
 #include "arch/utils.h"
 #include "lib/printf.h"
 #include "lib/ring_buf.h"
+#include "lib/semaphore.h"
 
 #define UART_RX_BUF_SIZE 256
 
 static char _uart_rx_storage[UART_RX_BUF_SIZE];
 static ring_buf_t uart_rx_buf = RING_BUF_INIT(_uart_rx_storage, UART_RX_BUF_SIZE, sizeof(char));
 
+static semaphore_t uart_rx_sem;
+
+
 int uart_buf_pop(char *out) {
     return ring_buf_pop(&uart_rx_buf, out);
+}
+
+void uart_rx_wait(void) {
+    sem_wait(&uart_rx_sem);
 }
 
 void mini_uart_send(char c) {
@@ -34,7 +42,7 @@ void mini_uart_send_string(char *str) {
     }
 }
 
-void mini_uart_init(void) {
+static void mini_uart_init_gpio(void) {
     unsigned int selector;
 
     selector = get32(GPFSEL1);
@@ -55,7 +63,7 @@ void mini_uart_init(void) {
     put32(AUX_ENABLES,
           1);  // Enable mini uart (this also enables access to its registers)
     put32(AUX_MU_CNTL_REG, 0);    // Disable auto flow control and disable
-                                  // receiver and transmitter (for now)
+    // receiver and transmitter (for now)
     // put32(AUX_MU_IER_REG, 0);     // Disable receive and transmit interrupts
     put32(AUX_MU_IER_REG, 1);     // Enable read interrupts and disable transmit interrupts
     put32(AUX_MU_IIR_REG, 2);     // Clear receive FIFO
@@ -64,6 +72,11 @@ void mini_uart_init(void) {
     put32(AUX_MU_BAUD_REG, 270);  // Set baud rate to 115200
 
     put32(AUX_MU_CNTL_REG, 3);  // Finally, enable transmitter and receiver
+}
+
+void mini_uart_init(void) {
+    mini_uart_init_gpio();
+    sem_init(&uart_rx_sem, 0);
 }
 
 void mini_uart_set_baudrate(unsigned int baudrate) {
@@ -83,5 +96,6 @@ void mini_uart_handle_irq(void) {
     while (get32(AUX_MU_LSR_REG) & 0x01) {
         char in = (char)(get32(AUX_MU_IO_REG) & 0xFF);
         ring_buf_push(&uart_rx_buf, &in);
+        sem_signal(&uart_rx_sem);
     }
 }

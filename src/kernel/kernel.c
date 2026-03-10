@@ -12,6 +12,7 @@
 #include "kernel/user.h"
 #include "lib/spinlock.h"
 #include "tests/test_ring_buf.h"
+#include "tests/test_semaphore.h"
 #include "kernel/console.h"
 
 #define DEMO_DELAY 50000000
@@ -59,6 +60,7 @@ void kernel_process(){
 	// 	LOG_CORE("Error while moving process to user mode\r\n");
 	// }
 	test_ring_buf();
+	test_semaphore();
 	init_done = 1;
 	asm volatile("dsb ish" ::: "memory");
 	exit_process();

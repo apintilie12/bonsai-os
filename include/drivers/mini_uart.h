@@ -9,4 +9,5 @@ void mini_uart_set_baudrate(unsigned int baudrate);
 void putc ( void* p, char c );
 void mini_uart_handle_irq(void);
 int  uart_buf_pop(char *out);
+void uart_rx_wait(void);
 #endif  /*_MINI_UART_H */

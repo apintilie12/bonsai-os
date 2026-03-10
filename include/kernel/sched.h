@@ -11,6 +11,7 @@
 
 #define TASK_RUNNING				0
 #define TASK_ZOMBIE					1
+#define TASK_WAITING				2
 
 #define TASK_NAME_MAX_LEN 			64
 

@@ -150,6 +150,7 @@ void console_readline(char *buf, int max) {
     char c;
 
     while (1) {
+        uart_rx_wait();
         if (!uart_buf_pop(&c))
             continue;
 
@@ -169,8 +170,8 @@ void console_readline(char *buf, int max) {
 
         if (c == 0x1B) { // ESC: start of arrow key sequence
             char seq1, seq2;
-            while (!uart_buf_pop(&seq1)) {}
-            while (!uart_buf_pop(&seq2)) {}
+            uart_rx_wait(); uart_buf_pop(&seq1);
+            uart_rx_wait(); uart_buf_pop(&seq2);
 
             if (seq1 != '[') continue;
             if (seq2 != 'A' && seq2 != 'B') continue; // only handle up/down

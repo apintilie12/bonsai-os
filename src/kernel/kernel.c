@@ -43,6 +43,15 @@ void demo_task_d(void) {
 	}
 }
 
+void echo_task(void) {
+	char c;
+	while (1) {
+		if (uart_buf_pop(&c)) {
+			mini_uart_send(c);
+		}
+	}
+}
+
 void kernel_process(){
 	LOG_CORE("Kernel process started. EL %d\r\n", get_el());
 	// unsigned long begin = (unsigned long)&user_begin;
@@ -101,10 +110,11 @@ void kernel_main()
 		return;
 	}
 
-	copy_process(PF_KTHREAD, (unsigned long)&demo_task_a, 0, "demo-a");
-	copy_process(PF_KTHREAD, (unsigned long)&demo_task_b, 0, "demo-b");
-	copy_process(PF_KTHREAD, (unsigned long)&demo_task_c, 0, "demo-c");
-	copy_process(PF_KTHREAD, (unsigned long)&demo_task_d, 0, "demo-d");
+	copy_process(PF_KTHREAD, (unsigned long)&echo_task, 0, "echo");
+	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_a, 0, "demo-a");
+	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_b, 0, "demo-b");
+	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_c, 0, "demo-c");
+	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_d, 0, "demo-d");
 
 	LOG_CORE("Entering idle loop\r\n");
 

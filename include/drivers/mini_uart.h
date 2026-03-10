@@ -8,4 +8,5 @@ void mini_uart_send_string(char* str);
 void mini_uart_set_baudrate(unsigned int baudrate);
 void putc ( void* p, char c );
 void mini_uart_handle_irq(void);
+int  uart_buf_pop(char *out);
 #endif  /*_MINI_UART_H */

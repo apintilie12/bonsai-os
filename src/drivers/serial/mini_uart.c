@@ -3,6 +3,16 @@
 #include "peripherals/gpio.h"
 #include "arch/utils.h"
 #include "lib/printf.h"
+#include "lib/ring_buf.h"
+
+#define UART_RX_BUF_SIZE 256
+
+static char _uart_rx_storage[UART_RX_BUF_SIZE];
+static ring_buf_t uart_rx_buf = RING_BUF_INIT(_uart_rx_storage, UART_RX_BUF_SIZE, sizeof(char));
+
+int uart_buf_pop(char *out) {
+    return ring_buf_pop(&uart_rx_buf, out);
+}
 
 void mini_uart_send(char c) {
     while (1) {
@@ -70,11 +80,8 @@ void putc ( void* p, char c)
 }
 
 void mini_uart_handle_irq(void) {
-    // char in =(char) get32(AUX_MU_IO_REG) & 0xFF;
-    // put32(AUX_MU_IIR_REG, 2);     // Clear receive FIFO
-    // printf("MiniUART IRQ triggered by char: %c\r\n", in);
     while (get32(AUX_MU_LSR_REG) & 0x01) {
-        char in = (char) get32(AUX_MU_IO_REG) & 0xFF;
-        printf("MiniUART IRQ triggered by char: %c\r\n", in);
+        char in = (char)(get32(AUX_MU_IO_REG) & 0xFF);
+        ring_buf_push(&uart_rx_buf, &in);
     }
 }

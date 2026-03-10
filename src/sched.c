@@ -70,6 +70,8 @@ void _schedule(void)
 	int c;
 	TASK_STRUCT *next;
 	TASK_STRUCT *p;
+	TASK_STRUCT *current = get_current_task();
+	int cpu_id = get_cpu_info()->cpu_id;
 	spin_lock(&sched_lock);
 	while (1) {
 		c = -1;
@@ -89,6 +91,12 @@ void _schedule(void)
 			}
 		}
 	}
+	if (next && next != current) {
+		// current->on_cpu = -1;
+		next->on_cpu = cpu_id;
+	} else {
+		next = 0;
+	}
 	spin_unlock(&sched_lock);
 	if (next) {
 		switch_to(next);
@@ -105,16 +113,10 @@ void schedule(void)
 
 void switch_to(TASK_STRUCT *next)
 {
-	TASK_STRUCT* current = get_current_task();
-	if (current == next)
-		return;
-	TASK_STRUCT *prev = current;
-
-	current->on_cpu = -1;
-	next->on_cpu = get_cpu_info()->cpu_id;
+	TASK_STRUCT *prev = get_current_task();
 	get_cpu_info()->current_task = next;
-
 	set_pgd(next->mm.pgd);
+	prev->on_cpu = -1;
 	cpu_switch_to(prev, next);
 }
 

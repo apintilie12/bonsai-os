@@ -6,6 +6,17 @@
 static unsigned short mem_map [ PAGING_PAGES ] = {0,};
 static spinlock_t mem_map_lock = SPINLOCK_INIT;
 
+void get_mem_stats(unsigned long *total, unsigned long *used) {
+	*total = PAGING_PAGES;
+	unsigned long count = 0;
+	spin_lock(&mem_map_lock);
+	for (unsigned long i = 0; i < PAGING_PAGES; i++) {
+		if (mem_map[i]) count++;
+	}
+	spin_unlock(&mem_map_lock);
+	*used = count;
+}
+
 unsigned long allocate_kernel_page() {
 	unsigned long page = get_free_page();
 	if (page == 0) {

@@ -1,7 +1,7 @@
 #ifndef _LOG_H
 #define _LOG_H
 
-#include "printf.h"
+#include "lib/printf.h"
 
 #define _BASENAME \
     (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)

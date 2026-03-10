@@ -1,6 +1,6 @@
-#include "user_sys.h"
-#include "user.h"
-#include "printf.h"
+#include "kernel/user_sys.h"
+#include "kernel/user.h"
+#include "lib/printf.h"
 
 void loop(char* str)
 {

@@ -1,17 +1,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "log.h"
-#include "utils.h"
-#include "timer.h"
-#include "irq.h"
-#include "fork.h"
-#include "sched.h"
-#include "mini_uart.h"
-#include "sys.h"
-#include "user.h"
-#include "spinlock.h"
-#include "test_ring_buf.h"
+#include "lib/log.h"
+#include "arch/utils.h"
+#include "drivers/timer.h"
+#include "kernel/irq.h"
+#include "kernel/fork.h"
+#include "kernel/sched.h"
+#include "drivers/mini_uart.h"
+#include "kernel/sys.h"
+#include "kernel/user.h"
+#include "lib/spinlock.h"
+#include "tests/test_ring_buf.h"
 
 #define DEMO_DELAY 50000000
 

@@ -1,6 +1,6 @@
-#include "utils.h"
-#include "log.h"
-#include "sched.h"
+#include "arch/utils.h"
+#include "lib/log.h"
+#include "kernel/sched.h"
 
 #define HZ 100
 #define CNTP_CTL_ENABLE 1

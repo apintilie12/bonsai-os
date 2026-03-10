@@ -1,6 +1,6 @@
-#include "arm/mmu.h"
-#include "arm/sysregs.h"
-#include "mm.h"
+#include "arch/arm/mmu.h"
+#include "arch/arm/sysregs.h"
+#include "mm/mm.h"
 #include "peripherals/base.h"
 
 .data

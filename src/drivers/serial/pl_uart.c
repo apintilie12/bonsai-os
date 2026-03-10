@@ -1,7 +1,7 @@
 #include "peripherals/pl_uart.h"
 
 #include "peripherals/gpio.h"
-#include "utils.h"
+#include "arch/utils.h"
 
 void pl_uart_init(void) {
     unsigned int selector;

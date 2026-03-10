@@ -1,8 +1,8 @@
 #include "peripherals/mini_uart.h"
 
 #include "peripherals/gpio.h"
-#include "utils.h"
-#include "printf.h"
+#include "arch/utils.h"
+#include "lib/printf.h"
 
 void mini_uart_send(char c) {
     while (1) {

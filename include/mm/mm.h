@@ -31,7 +31,7 @@
 
 #ifndef __ASSEMBLER__
 
-#include "sched.h"
+#include "kernel/sched.h"
 
 unsigned long get_free_page();
 void free_page(unsigned long p);

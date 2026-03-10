@@ -1,7 +1,7 @@
 #ifndef _RING_BUF_H
 #define _RING_BUF_H
 
-#include "spinlock.h"
+#include "lib/spinlock.h"
 
 typedef struct {
     void         *buf;

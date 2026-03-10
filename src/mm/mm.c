@@ -1,7 +1,7 @@
-#include "mm.h"
-#include "arm/mmu.h"
-#include "sched.h"
-#include "spinlock.h"
+#include "mm/mm.h"
+#include "arch/arm/mmu.h"
+#include "kernel/sched.h"
+#include "lib/spinlock.h"
 
 static unsigned short mem_map [ PAGING_PAGES ] = {0,};
 static spinlock_t mem_map_lock = SPINLOCK_INIT;

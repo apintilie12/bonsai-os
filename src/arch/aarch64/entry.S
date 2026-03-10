@@ -1,6 +1,6 @@
-#include "arm/sysregs.h"
-#include "entry.h"
-#include "sys.h"
+#include "arch/arm/sysregs.h"
+#include "arch/entry.h"
+#include "kernel/sys.h"
 
 	.macro handle_invalid_entry el, type
 	kernel_entry \el

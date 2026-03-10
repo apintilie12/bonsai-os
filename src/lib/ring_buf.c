@@ -1,4 +1,4 @@
-#include "ring_buf.h"
+#include "lib/ring_buf.h"
 
 static void rb_memcpy(void *dst, const void *src, unsigned int n) {
     unsigned char *d = (unsigned char *)dst;

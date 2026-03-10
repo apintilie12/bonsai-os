@@ -1,7 +1,7 @@
 #ifndef _FORK_H
 #define _FORK_H
 
-#include "sched.h"
+#include "kernel/sched.h"
 
 /*
  * PSR bits

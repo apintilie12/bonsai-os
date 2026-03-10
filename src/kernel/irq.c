@@ -1,10 +1,10 @@
-#include "utils.h"
-#include "printf.h"
-#include "timer.h"
-#include "entry.h"
+#include "arch/utils.h"
+#include "lib/printf.h"
+#include "drivers/timer.h"
+#include "arch/entry.h"
 #include "peripherals/irq.h"
 #include "peripherals/qa7.h"
-#include "mini_uart.h"
+#include "drivers/mini_uart.h"
 
 const char *entry_error_messages[] = {
 	"SYNC_INVALID_EL1t",

@@ -1,46 +1,43 @@
 ARMGNU ?= aarch64-linux-gnu
 
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -g
-TOPS = -Wall -Iinclude -g
+COPS   = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -g
 ASMOPS = -Iinclude -g
 
 BUILD_DIR = build
-BUILD_NATIVE_DIR = build-native
-SRC_DIR = src
-TEST_SRC_DIR = test-src
 
-all : kernel8.img
+all: kernel8.img
 
-clean :
-	rm -rf $(BUILD_DIR) *.img 
-	rm -rf $(BUILD_NATIVE_DIR)
+clean:
+	rm -rf $(BUILD_DIR) *.img
 
-$(BUILD_NATIVE_DIR)/%_c.o : $(TEST_SRC_DIR)/%.c
-	mkdir -p $(@D)
-	gcc $(TOPS) -MMD -c $< -o $@
+# --- Source files by module ---
+ARCH_S   = $(wildcard src/arch/aarch64/*.S)
+KERNEL_C = $(wildcard src/kernel/*.c)
+MM_C     = $(wildcard src/mm/*.c)
+DRIVER_C = $(wildcard src/drivers/serial/*.c) $(wildcard src/drivers/timer/*.c)
+LIB_C    = $(wildcard src/lib/*.c)
+TEST_C   = $(wildcard src/tests/*.c)
 
-$(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
-	mkdir -p $(@D)
-	$(ARMGNU)-gcc $(COPS) -MMD -c $< -o $@
+ALL_C = $(KERNEL_C) $(MM_C) $(DRIVER_C) $(LIB_C) $(TEST_C)
+ALL_S = $(ARCH_S)
 
-$(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
-	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
+# --- Object files ---
+OBJ_FILES  = $(ALL_C:%.c=$(BUILD_DIR)/%_c.o)
+OBJ_FILES += $(ALL_S:%.S=$(BUILD_DIR)/%_s.o)
 
-C_FILES = $(wildcard $(SRC_DIR)/*.c)
-TEST_C_FILES = $(wildcard $(TEST_SRC_DIR)/*.c)
-ASM_FILES = $(wildcard $(SRC_DIR)/*.S)
-OBJ_FILES = $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o)
-OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
-
-NATIVE_OBJ_FILES = $(TEST_C_FILES:$(TEST_SRC_DIR)/%.c=$(BUILD_NATIVE_DIR)/%_c.o)
-
+# --- Dependency files ---
 DEP_FILES = $(OBJ_FILES:%.o=%.d)
 -include $(DEP_FILES)
 
+# --- Compilation rules ---
+$(BUILD_DIR)/%_c.o: %.c
+	mkdir -p $(@D)
+	$(ARMGNU)-gcc $(COPS) -MMD -c $< -o $@
 
-NATIVE_DEP_FILES = $(NATIVE_OBJ_FILES:%.o=%.d)
--include $(NATIVE_DEP_FILES)
+$(BUILD_DIR)/%_s.o: %.S
+	mkdir -p $(@D)
+	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
 
-kernel8.img: $(SRC_DIR)/linker.ld $(OBJ_FILES)
-	$(ARMGNU)-ld -T $(SRC_DIR)/linker.ld -o $(BUILD_DIR)/kernel8.elf  $(OBJ_FILES)
+kernel8.img: src/arch/aarch64/linker.ld $(OBJ_FILES)
+	$(ARMGNU)-ld -T src/arch/aarch64/linker.ld -o $(BUILD_DIR)/kernel8.elf $(OBJ_FILES)
 	$(ARMGNU)-objcopy $(BUILD_DIR)/kernel8.elf -O binary kernel8.img

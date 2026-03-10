@@ -1,4 +1,4 @@
-#include "string.h"
+#include "lib/string.h"
 
 void itoa (unsigned long val, char *buf) {
     char d;

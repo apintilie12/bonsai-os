@@ -19,9 +19,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 */
 
-#include "printf.h"
-#include "spinlock.h"
-#include "irq.h"
+#include "lib/printf.h"
+#include "lib/spinlock.h"
+#include "kernel/irq.h"
 
 typedef void (*putcf) (void*,char);
 static putcf stdout_putf;

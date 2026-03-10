@@ -1,9 +1,9 @@
-#include "sched.h"
-#include "irq.h"
-#include "printf.h"
-#include "utils.h"
-#include "mm.h"
-#include "spinlock.h"
+#include "kernel/sched.h"
+#include "kernel/irq.h"
+#include "lib/printf.h"
+#include "arch/utils.h"
+#include "mm/mm.h"
+#include "lib/spinlock.h"
 
 static TASK_STRUCT init_task = INIT_TASK;
 static TASK_STRUCT idle_tasks[4]; // [0] unused; cores 1-3 use [1..3]

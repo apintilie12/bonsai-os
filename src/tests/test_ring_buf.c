@@ -1,6 +1,6 @@
-#include "test_ring_buf.h"
-#include "ring_buf.h"
-#include "log.h"
+#include "tests/test_ring_buf.h"
+#include "lib/ring_buf.h"
+#include "lib/log.h"
 
 #define PASS(name) LOG_CORE("  [PASS] " name "\r\n")
 #define FAIL(name) LOG_CORE("  [FAIL] " name "\r\n")

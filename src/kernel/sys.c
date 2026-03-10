@@ -1,8 +1,8 @@
-#include "fork.h"
-#include "log.h"
-#include "utils.h"
-#include "sched.h"
-#include "mm.h"
+#include "kernel/fork.h"
+#include "lib/log.h"
+#include "arch/utils.h"
+#include "kernel/sched.h"
+#include "mm/mm.h"
 
 
 void sys_write(char * buf){

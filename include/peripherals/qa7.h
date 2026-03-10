@@ -1,7 +1,7 @@
 #ifndef _P_QA7_H
 #define _P_QA7_H
 
-#include "mm.h"
+#include "mm/mm.h"
 
 #define QA7_PHYS_BASE       0x40000000
 #define QA7_BASE            (VA_START + QA7_PHYS_BASE)

@@ -1,7 +1,7 @@
 #ifndef _SCHED_H
 #define _SCHED_H
 
-#include "list.h"
+#include "lib/list.h"
 
 #define THREAD_CPU_CONTEXT			0 		// offset of cpu_context in task_struct 
 

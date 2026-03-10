@@ -1,10 +1,10 @@
-#include "mm.h"
-#include "sched.h"
-#include "entry.h"
-#include "printf.h"
-#include "fork.h"
-#include "utils.h"
-#include "list.h"
+#include "mm/mm.h"
+#include "kernel/sched.h"
+#include "arch/entry.h"
+#include "lib/printf.h"
+#include "kernel/fork.h"
+#include "arch/utils.h"
+#include "lib/list.h"
 
 int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, const char *name)
 {

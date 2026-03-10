@@ -1,4 +1,8 @@
 #include "kernel/console.h"
+
+#include <arch/utils.h>
+
+#include "kernel/reset.h"
 #include "drivers/mini_uart.h"
 #include "lib/printf.h"
 #include "lib/ring_buf.h"
@@ -54,6 +58,7 @@ static int parse_args(char *line, char *argv[], int max_args) {
 static void cmd_help(int argc, char *argv[]);
 static void cmd_tasks(int argc, char *argv[]);
 static void cmd_mem(int argc, char *argv[]);
+static void cmd_reboot(int argc, char *argv[]);
 
 typedef struct {
     const char *name;
@@ -62,9 +67,10 @@ typedef struct {
 } cmd_entry_t;
 
 static cmd_entry_t cmd_table[] = {
-    { "help",  cmd_help,  "show available commands"        },
-    { "tasks", cmd_tasks, "list all tasks and their state" },
-    { "mem",   cmd_mem,   "show memory usage"              },
+    { "help",   cmd_help,   "show available commands"        },
+    { "tasks",  cmd_tasks,  "list all tasks and their state" },
+    { "mem",    cmd_mem,    "show memory usage"              },
+    { "reboot", cmd_reboot, "reboot the system"              },
     { 0 }
 };
 
@@ -89,6 +95,12 @@ static void cmd_tasks(int argc, char *argv[]) {
         pad_int((int)p->counter, 8);
         printf("\r\n");
     }
+}
+
+static void cmd_reboot(int argc, char *argv[]) {
+    printf("Rebooting...\r\n");
+    delay(50000000);
+    reboot();
 }
 
 static void cmd_mem(int argc, char *argv[]) {
@@ -211,7 +223,7 @@ void console_task(void) {
 
     while (!init_done) {}
 
-    printf("\r\nBonsai OS Console\r\n");
+    printf("\r\n\033[32mBonsai OS\033[0m Console\r\n");
     printf("Type 'help' for available commands.\r\n\r\n");
 
     while (1) {

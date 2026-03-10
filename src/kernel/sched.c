@@ -138,6 +138,13 @@ void timer_tick()
 	// disable_irq();
 }
 
+static void switch_to_idle(void) {
+	int cpu_id = get_cpu_info()->cpu_id;
+	TASK_STRUCT *idle = &idle_tasks[cpu_id];
+	idle->on_cpu = cpu_id;
+	switch_to(idle);
+}
+
 void exit_process(){
 	preempt_disable();
 	TASK_STRUCT *p;
@@ -152,4 +159,7 @@ void exit_process(){
 	spin_unlock(&sched_lock);
 	preempt_enable();
 	schedule();
+	// If schedule returns, that means that no free tasks are available
+	// switch to the processor's idle task (which is not part of the global run queue)
+	switch_to_idle();
 }

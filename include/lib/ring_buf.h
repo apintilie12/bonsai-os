@@ -18,6 +18,7 @@ typedef struct {
 
 int          ring_buf_push(ring_buf_t *rb, const void *elem);
 int          ring_buf_pop(ring_buf_t *rb, void *out);
+int          ring_buf_peek(ring_buf_t *rb, unsigned int offset, void *out);
 int          ring_buf_is_empty(ring_buf_t *rb);
 int          ring_buf_is_full(ring_buf_t *rb);
 unsigned int ring_buf_count(ring_buf_t *rb);

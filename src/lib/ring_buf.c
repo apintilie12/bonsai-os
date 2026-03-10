@@ -33,6 +33,21 @@ int ring_buf_pop(ring_buf_t *rb, void *out) {
     return 1;
 }
 
+// offset 0 = most recently pushed, 1 = one before that, etc.
+int ring_buf_peek(ring_buf_t *rb, unsigned int offset, void *out) {
+    spin_lock(&rb->lock);
+    unsigned int count = (rb->head - rb->tail + rb->capacity) % rb->capacity;
+    if (offset >= count) {
+        spin_unlock(&rb->lock);
+        return 0;
+    }
+    unsigned int idx = (rb->head - 1 - offset + rb->capacity) % rb->capacity;
+    unsigned char *slot = (unsigned char *)rb->buf + idx * rb->elem_size;
+    rb_memcpy(out, slot, rb->elem_size);
+    spin_unlock(&rb->lock);
+    return 1;
+}
+
 int ring_buf_is_empty(ring_buf_t *rb) {
     spin_lock(&rb->lock);
     int empty = (rb->tail == rb->head);

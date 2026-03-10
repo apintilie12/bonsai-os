@@ -16,6 +16,10 @@
 
 #define DEMO_DELAY 50000000
 
+volatile int uart_ready = 0;
+volatile int sched_ready = 0;
+volatile int init_done = 0;
+
 void demo_task_a(void) {
 	while (1) {
 		LOG_CORE("demo-a running\r\n");
@@ -44,14 +48,6 @@ void demo_task_d(void) {
 	}
 }
 
-void readline_test_task(void) {
-	char buf[CONSOLE_LINE_MAX];
-	while (1) {
-		printf("> ");
-		console_readline(buf, CONSOLE_LINE_MAX);
-		printf("got: [%s]\r\n", buf);
-	}
-}
 
 void kernel_process(){
 	LOG_CORE("Kernel process started. EL %d\r\n", get_el());
@@ -63,8 +59,9 @@ void kernel_process(){
 	// 	LOG_CORE("Error while moving process to user mode\r\n");
 	// }
 	test_ring_buf();
-	while (1) {
-	}
+	init_done = 1;
+	asm volatile("dsb ish" ::: "memory");
+	exit_process();
 }
 
 void test_spinlock(void) {
@@ -79,9 +76,6 @@ void test_spinlock(void) {
 	LOG_CORE("  Lock released. Test Passed!\r\n");
 }
 
-
-volatile int uart_ready = 0;
-volatile int sched_ready = 0;
 
 void kernel_main()
 {
@@ -111,7 +105,7 @@ void kernel_main()
 		return;
 	}
 
-	copy_process(PF_KTHREAD, (unsigned long)&readline_test_task, 0, "readline-test");
+	copy_process(PF_KTHREAD, (unsigned long)&console_task, 0, "console");
 	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_a, 0, "demo-a");
 	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_b, 0, "demo-b");
 	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_c, 0, "demo-c");

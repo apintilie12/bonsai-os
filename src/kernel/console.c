@@ -6,6 +6,7 @@
 #include "drivers/mini_uart.h"
 #include "lib/printf.h"
 #include "lib/panic.h"
+#include "lib/string.h"
 #include "lib/ring_buf.h"
 #include "kernel/sched.h"
 #include "mm/mm.h"
@@ -17,11 +18,6 @@ extern volatile int init_done;
 // ----------------------------------------------------------------------------
 // Internal utilities
 // ----------------------------------------------------------------------------
-
-static int kstrcmp(const char *a, const char *b) {
-    while (*a && *a == *b) { a++; b++; }
-    return *a - *b;
-}
 
 static void pad_str(const char *s, int width) {
     int len = 0;
@@ -249,7 +245,7 @@ void console_task(void) {
 
         int found = 0;
         for (cmd_entry_t *e = cmd_table; e->name; e++) {
-            if (kstrcmp(argv[0], e->name) == 0) {
+            if (strcmp(argv[0], e->name) == 0) {
                 e->fn(argc, argv);
                 found = 1;
                 break;

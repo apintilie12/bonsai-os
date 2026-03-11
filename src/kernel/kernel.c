@@ -12,6 +12,7 @@
 #include "lib/spinlock.h"
 #include "tests/test_ring_buf.h"
 #include "tests/test_semaphore.h"
+#include "tests/test_string.h"
 #include "kernel/console.h"
 
 volatile int uart_ready = 0;
@@ -22,6 +23,7 @@ void kernel_process(){
 	LOG_CORE("Kernel process started. EL %d\r\n", get_el());
 	test_ring_buf();
 	test_semaphore();
+	test_string();
 	init_done = 1;
 	asm volatile("dsb ish" ::: "memory");
 	exit_process();

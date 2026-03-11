@@ -5,6 +5,7 @@
 #include "kernel/fork.h"
 #include "arch/utils.h"
 #include "lib/list.h"
+#include "lib/errno.h"
 
 int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, const char *name)
 {
@@ -16,7 +17,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 	struct pt_regs *childregs = task_pt_regs(p);
 
 	if (!p)
-		return -1;
+		return E_NOMEM;
 
 	if (clone_flags & PF_KTHREAD) {
 		p->cpu_context.x19 = fn;
@@ -55,7 +56,7 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
 	regs->sp = 2 *  PAGE_SIZE;  
 	unsigned long code_page = allocate_user_page(current, 0);
 	if (code_page == 0)	{
-		return -1;
+		return E_NOMEM;
 	}
 	memcpy(code_page, start, size);
 	set_pgd(current->mm.pgd);

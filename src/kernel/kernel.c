@@ -9,56 +9,17 @@
 #include "kernel/sched.h"
 #include "drivers/mini_uart.h"
 #include "kernel/sys.h"
-#include "kernel/user.h"
 #include "lib/spinlock.h"
 #include "tests/test_ring_buf.h"
 #include "tests/test_semaphore.h"
 #include "kernel/console.h"
 
-#define DEMO_DELAY 50000000
-
 volatile int uart_ready = 0;
 volatile int sched_ready = 0;
 volatile int init_done = 0;
 
-void demo_task_a(void) {
-	while (1) {
-		LOG_CORE("demo-a running\r\n");
-		delay(DEMO_DELAY);
-	}
-}
-
-void demo_task_b(void) {
-	while (1) {
-		LOG_CORE("demo-b running\r\n");
-		delay(DEMO_DELAY);
-	}
-}
-
-void demo_task_c(void) {
-	while (1) {
-		LOG_CORE("demo-c running\r\n");
-		delay(DEMO_DELAY);
-	}
-}
-
-void demo_task_d(void) {
-	while (1) {
-		LOG_CORE("demo-d running\r\n");
-		delay(DEMO_DELAY);
-	}
-}
-
-
 void kernel_process(){
 	LOG_CORE("Kernel process started. EL %d\r\n", get_el());
-	// unsigned long begin = (unsigned long)&user_begin;
-	// unsigned long end = (unsigned long)&user_end;
-	// unsigned long process = (unsigned long)&user_process;
-	// int err = move_to_user_mode(begin, end - begin, process - begin);
-	// if (err < 0){
-	// 	LOG_CORE("Error while moving process to user mode\r\n");
-	// }
 	test_ring_buf();
 	test_semaphore();
 	init_done = 1;
@@ -108,10 +69,6 @@ void kernel_main()
 	}
 
 	copy_process(PF_KTHREAD, (unsigned long)&console_task, 0, "console");
-	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_a, 0, "demo-a");
-	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_b, 0, "demo-b");
-	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_c, 0, "demo-c");
-	// copy_process(PF_KTHREAD, (unsigned long)&demo_task_d, 0, "demo-d");
 
 	LOG_CORE("Entering idle loop\r\n");
 

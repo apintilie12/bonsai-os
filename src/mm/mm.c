@@ -2,6 +2,7 @@
 #include "arch/arm/mmu.h"
 #include "kernel/sched.h"
 #include "lib/spinlock.h"
+#include "lib/errno.h"
 
 static unsigned short mem_map [ PAGING_PAGES ] = {0,};
 static spinlock_t mem_map_lock = SPINLOCK_INIT;
@@ -108,7 +109,7 @@ int copy_virt_memory(TASK_STRUCT *dst) {
 	for (int i = 0; i < src->mm.user_pages_count; i++) {
 		unsigned long kernel_va = allocate_user_page(dst, src->mm.user_pages[i].virt_addr);
 		if( kernel_va == 0) {
-			return -1;
+			return E_NOMEM;
 		}
 		memcpy(kernel_va, src->mm.user_pages[i].virt_addr, PAGE_SIZE);
 	}
@@ -123,14 +124,14 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
 	if ((dfs & 0b111100) == 0b100) {
 		unsigned long page = get_free_page();
 		if (page == 0) {
-			return -1;
+			return E_NOMEM;
 		}
 		map_page(current, addr & PAGE_MASK, page);
 		ind++;
 		if (ind > 2){
-			return -1;
+			return E_INVAL;
 		}
-		return 0;
+		return E_OK;
 	}
-	return -1;
+	return E_INVAL;
 }

@@ -1,5 +1,6 @@
 #include "arch/utils.h"
 #include "lib/printf.h"
+#include "lib/panic.h"
 #include "drivers/timer.h"
 #include "arch/entry.h"
 #include "peripherals/irq.h"
@@ -43,10 +44,7 @@ void enable_interrupt_controller()
 
 void show_invalid_entry_message(int type, unsigned long esr, unsigned long address)
 {
-	unsigned long mpidr;
-	asm volatile("mrs %0, mpidr_el1" : "=r"(mpidr));
-	int cpu_id = mpidr & 0xFF;
-	printf("Core %d: %s, ESR: %x, address: %x\r\n", cpu_id, entry_error_messages[type], esr, address);
+	panic("%s, ESR: %x, address: %x", entry_error_messages[type], esr, address);
 }
 
 void handle_irq(void)

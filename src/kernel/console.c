@@ -5,6 +5,7 @@
 #include "kernel/reset.h"
 #include "drivers/mini_uart.h"
 #include "lib/printf.h"
+#include "lib/panic.h"
 #include "lib/ring_buf.h"
 #include "kernel/sched.h"
 #include "mm/mm.h"
@@ -59,6 +60,7 @@ static void cmd_help(int argc, char *argv[]);
 static void cmd_tasks(int argc, char *argv[]);
 static void cmd_mem(int argc, char *argv[]);
 static void cmd_reboot(int argc, char *argv[]);
+static void cmd_panic(int argc, char *argv[]);
 
 typedef struct {
     const char *name;
@@ -71,6 +73,7 @@ static cmd_entry_t cmd_table[] = {
     { "tasks",  cmd_tasks,  "list all tasks and their state" },
     { "mem",    cmd_mem,    "show memory usage"              },
     { "reboot", cmd_reboot, "reboot the system"              },
+    { "panic",  cmd_panic,  "trigger a test kernel panic"    },
     { 0 }
 };
 
@@ -95,6 +98,10 @@ static void cmd_tasks(int argc, char *argv[]) {
         pad_int((int)p->counter, 8);
         printf("\r\n");
     }
+}
+
+static void cmd_panic(int argc, char *argv[]) {
+    panic("test panic triggered from console");
 }
 
 static void cmd_reboot(int argc, char *argv[]) {

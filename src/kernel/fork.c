@@ -6,6 +6,7 @@
 #include "arch/utils.h"
 #include "lib/list.h"
 #include "lib/errno.h"
+#include "lib/panic.h"
 
 int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, const char *name)
 {
@@ -16,8 +17,10 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 	p = (TASK_STRUCT*) page;
 	struct pt_regs *childregs = task_pt_regs(p);
 
-	if (!p)
+	if (!p) {
+		preempt_enable();
 		return E_NOMEM;
+	}
 
 	if (clone_flags & PF_KTHREAD) {
 		p->cpu_context.x19 = fn;

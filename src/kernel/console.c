@@ -3,6 +3,7 @@
 #include <arch/utils.h>
 
 #include "kernel/reset.h"
+#include "kernel/irq.h"
 #include "drivers/mini_uart.h"
 #include "lib/printf.h"
 #include "lib/panic.h"
@@ -106,6 +107,10 @@ static void cmd_echo(int argc, char *argv[]) {
     printf("\r\n");
 }
 
+static void cmd_irqs(int argc, char *argv[]) {
+    irq_print_handlers();
+}
+
 static void cmd_panic(int argc, char *argv[]) {
     panic("test panic triggered from console");
 }
@@ -132,6 +137,7 @@ void console_init(void) {
     console_register_cmd("mem",    cmd_mem,    "show memory usage");
     console_register_cmd("reboot", cmd_reboot, "reboot the system");
     console_register_cmd("echo",   cmd_echo,   "print arguments to console");
+    console_register_cmd("irqs",   cmd_irqs,   "list registered IRQ handlers");
     console_register_cmd("panic",  cmd_panic,  "trigger a test kernel panic");
 }
 

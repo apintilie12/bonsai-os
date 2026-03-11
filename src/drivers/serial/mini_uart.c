@@ -1,10 +1,12 @@
 #include "peripherals/mini_uart.h"
 
 #include "peripherals/gpio.h"
+#include "peripherals/irq.h"
 #include "arch/utils.h"
 #include "lib/printf.h"
 #include "lib/ring_buf.h"
 #include "lib/semaphore.h"
+#include "kernel/irq.h"
 
 #define UART_RX_BUF_SIZE 256
 
@@ -39,6 +41,14 @@ char mini_uart_recv(void) {
 void mini_uart_send_string(char *str) {
     for (int i = 0; str[i] != '\0'; i++) {
         mini_uart_send((char)str[i]);
+    }
+}
+
+void mini_uart_handle_irq(void) {
+    while (get32(AUX_MU_LSR_REG) & 0x01) {
+        char in = (char)(get32(AUX_MU_IO_REG) & 0xFF);
+        if (ring_buf_push(&uart_rx_buf, &in))
+            sem_signal(&uart_rx_sem);
     }
 }
 
@@ -77,6 +87,7 @@ static void mini_uart_init_gpio(void) {
 void mini_uart_init(void) {
     mini_uart_init_gpio();
     sem_init(&uart_rx_sem, 0);
+    irq_register_gpu(AUX_INT_IRQ, mini_uart_handle_irq, "mini-uart");
 }
 
 void mini_uart_set_baudrate(unsigned int baudrate) {
@@ -90,12 +101,4 @@ void mini_uart_set_baudrate(unsigned int baudrate) {
 void putc ( void* p, char c)
 {
 	mini_uart_send(c);
-}
-
-void mini_uart_handle_irq(void) {
-    while (get32(AUX_MU_LSR_REG) & 0x01) {
-        char in = (char)(get32(AUX_MU_IO_REG) & 0xFF);
-        if (ring_buf_push(&uart_rx_buf, &in))
-            sem_signal(&uart_rx_sem);
-    }
 }

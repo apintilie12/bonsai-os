@@ -95,7 +95,7 @@ void putc ( void* p, char c)
 void mini_uart_handle_irq(void) {
     while (get32(AUX_MU_LSR_REG) & 0x01) {
         char in = (char)(get32(AUX_MU_IO_REG) & 0xFF);
-        ring_buf_push(&uart_rx_buf, &in);
-        sem_signal(&uart_rx_sem);
+        if (ring_buf_push(&uart_rx_buf, &in))
+            sem_signal(&uart_rx_sem);
     }
 }

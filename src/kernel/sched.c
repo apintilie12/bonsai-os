@@ -5,23 +5,33 @@
 #include "mm/mm.h"
 #include "lib/spinlock.h"
 
-static TASK_STRUCT init_task = INIT_TASK;
-static TASK_STRUCT idle_tasks[4]; // [0] unused; cores 1-3 use [1..3]
+static TASK_STRUCT idle_tasks[4]; // one per core; context captured on first schedule() call
 CPU_INFO cpu_data[4];
 LIST_ENTRY global_all_threads_list;
-int nr_tasks = 1;
+int nr_tasks = 0;
 static spinlock_t sched_lock = SPINLOCK_INIT;
 
 
-void sched_init(void) 
+void sched_init(void)
 {
-	// Setup Core 0
-	cpu_data[0].current_task = &init_task;
+	// Setup Core 0 idle task (mirrors sched_init_secondary for cores 1-3)
+	TASK_STRUCT *idle = &idle_tasks[0];
+	idle->state = TASK_RUNNING;
+	idle->counter = 1;
+	idle->priority = 1;
+	idle->preempt_count = 0;
+	idle->flags = PF_KTHREAD;
+	idle->on_cpu = 0;
+	idle->mm.pgd = 0;
+	const char idle0_name[] = "idle-0";
+	for (int i = 0; i <= (int)sizeof(idle0_name); i++)
+		idle->name[i] = idle0_name[i];
+
+	cpu_data[0].current_task = idle;
 	cpu_data[0].cpu_id = 0;
 	asm volatile("msr tpidr_el1, %0" :: "r"(&cpu_data[0]));
 
 	list_head_init(&global_all_threads_list);
-	list_add_tail(&global_all_threads_list, &(init_task.all_threads_list));
 }
 
 void sched_init_secondary(int cpu_id)

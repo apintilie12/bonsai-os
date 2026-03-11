@@ -95,13 +95,5 @@ extern void exit_process(void);
 extern void add_task(TASK_STRUCT* task);
 extern void sched_init_secondary(int cpu_id);
 
-#define INIT_TASK \
-/* cpu_context */	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-/* state etc   */	0,0,15,0,PF_KTHREAD, \
-/* on_cpu      */	0, \
-/* mm */			{0, 0, {{0}}, 0, {0}}, \
-/* name        */	"main-thread" \
-}
-
 #endif
 #endif

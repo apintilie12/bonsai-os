@@ -1,5 +1,6 @@
 #include "lib/semaphore.h"
 #include "kernel/sched.h"
+#include "kernel/irq.h"
 
 void sem_init(semaphore_t *sem, int count) {
     sem->count = count;
@@ -13,6 +14,10 @@ void sem_wait(semaphore_t *sem) {
     int in_list = 0;
 
     while (1) {
+        // Disable IRQs before acquiring the lock to prevent a UART IRQ from
+        // firing on this core while the lock is held, which would deadlock if
+        // the IRQ handler calls sem_signal (also needs this lock).
+        disable_irq();
         spin_lock(&sem->lock);
 
         if (sem->count > 0) {
@@ -20,6 +25,7 @@ void sem_wait(semaphore_t *sem) {
             if (in_list)
                 list_del(&node.entry);
             spin_unlock(&sem->lock);
+            enable_irq();
             return;
         }
 
@@ -32,6 +38,7 @@ void sem_wait(semaphore_t *sem) {
         }
         get_current_task()->state = TASK_WAITING;
         spin_unlock(&sem->lock);
+        enable_irq();
 
         schedule(); // yields; returns when state is TASK_RUNNING again
     }
@@ -40,12 +47,17 @@ void sem_wait(semaphore_t *sem) {
 void sem_signal(semaphore_t *sem) {
     spin_lock(&sem->lock);
     sem->count++;
-    if (!list_empty(&sem->waiters)) {
-        sem_waiter_t *w = CONTAINER_OF(sem->waiters.next, sem_waiter_t, entry);
-        // Set RUNNING without removing from list — the waiter removes itself
-        // in sem_wait once it successfully decrements count.
-        w->task->state = TASK_RUNNING;
-        asm volatile("dsb ish" ::: "memory");
+    // Find the first waiter that is still TASK_WAITING and wake it.
+    // Waiters already set to TASK_RUNNING (woken by a prior signal but not
+    // yet scheduled) are skipped so rapid back-to-back signals each wake a
+    // distinct waiter rather than repeatedly signalling the same one.
+    sem_waiter_t *w;
+    LIST_FOR_EACH_ENTRY(w, &sem->waiters, entry) {
+        if (w->task->state == TASK_WAITING) {
+            w->task->state = TASK_RUNNING;
+            asm volatile("dsb ish" ::: "memory");
+            break;
+        }
     }
     spin_unlock(&sem->lock);
 }

@@ -49,14 +49,8 @@ static int parse_args(char *line, char *argv[], int max_args) {
 }
 
 // ----------------------------------------------------------------------------
-// Commands
+// Command registry
 // ----------------------------------------------------------------------------
-
-static void cmd_help(int argc, char *argv[]);
-static void cmd_tasks(int argc, char *argv[]);
-static void cmd_mem(int argc, char *argv[]);
-static void cmd_reboot(int argc, char *argv[]);
-static void cmd_panic(int argc, char *argv[]);
 
 typedef struct {
     const char *name;
@@ -64,20 +58,28 @@ typedef struct {
     const char *help;
 } cmd_entry_t;
 
-static cmd_entry_t cmd_table[] = {
-    { "help",   cmd_help,   "show available commands"        },
-    { "tasks",  cmd_tasks,  "list all tasks and their state" },
-    { "mem",    cmd_mem,    "show memory usage"              },
-    { "reboot", cmd_reboot, "reboot the system"              },
-    { "panic",  cmd_panic,  "trigger a test kernel panic"    },
-    { 0 }
-};
+static cmd_entry_t cmd_table[CONSOLE_CMD_MAX];
+static int cmd_count = 0;
+
+void console_register_cmd(const char *name, void (*fn)(int, char **), const char *help) {
+    if (cmd_count >= CONSOLE_CMD_MAX) {
+        panic("console_register_cmd: command table full (max %d)", CONSOLE_CMD_MAX);
+    }
+    cmd_table[cmd_count].name = name;
+    cmd_table[cmd_count].fn   = fn;
+    cmd_table[cmd_count].help = help;
+    cmd_count++;
+}
+
+// ----------------------------------------------------------------------------
+// Built-in commands
+// ----------------------------------------------------------------------------
 
 static void cmd_help(int argc, char *argv[]) {
-    for (cmd_entry_t *e = cmd_table; e->name; e++) {
+    for (int i = 0; i < cmd_count; i++) {
         printf("  ");
-        pad_str(e->name, 10);
-        printf("%s\r\n", e->help);
+        pad_str(cmd_table[i].name, 10);
+        printf("%s\r\n", cmd_table[i].help);
     }
 }
 
@@ -94,6 +96,14 @@ static void cmd_tasks(int argc, char *argv[]) {
         pad_int((int)p->counter, 8);
         printf("\r\n");
     }
+}
+
+static void cmd_echo(int argc, char *argv[]) {
+    for (int i = 1; i < argc; i++) {
+        printf("%s", argv[i]);
+        if (i < argc - 1) printf(" ");
+    }
+    printf("\r\n");
 }
 
 static void cmd_panic(int argc, char *argv[]) {
@@ -114,6 +124,15 @@ static void cmd_mem(int argc, char *argv[]) {
     printf("  Total     : "); pad_int(total, 0); printf(" pages ("); pad_int((total * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
     printf("  Used      : "); pad_int(used,  0); printf(" pages ("); pad_int((used  * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
     printf("  Free      : "); pad_int(free,  0); printf(" pages ("); pad_int((free  * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
+}
+
+void console_init(void) {
+    console_register_cmd("help",   cmd_help,   "show available commands");
+    console_register_cmd("tasks",  cmd_tasks,  "list all tasks and their state");
+    console_register_cmd("mem",    cmd_mem,    "show memory usage");
+    console_register_cmd("reboot", cmd_reboot, "reboot the system");
+    console_register_cmd("echo",   cmd_echo,   "print arguments to console");
+    console_register_cmd("panic",  cmd_panic,  "trigger a test kernel panic");
 }
 
 // ----------------------------------------------------------------------------
@@ -244,9 +263,9 @@ void console_task(void) {
             continue;
 
         int found = 0;
-        for (cmd_entry_t *e = cmd_table; e->name; e++) {
-            if (strcmp(argv[0], e->name) == 0) {
-                e->fn(argc, argv);
+        for (int i = 0; i < cmd_count; i++) {
+            if (strcmp(argv[0], cmd_table[i].name) == 0) {
+                cmd_table[i].fn(argc, argv);
                 found = 1;
                 break;
             }

@@ -70,6 +70,7 @@ void kernel_main()
 		return;
 	}
 
+	console_init();
 	copy_process(PF_KTHREAD, (unsigned long)&console_task, 0, "console");
 
 	LOG_CORE("Entering idle loop\r\n");

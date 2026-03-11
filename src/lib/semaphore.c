@@ -1,6 +1,5 @@
 #include "lib/semaphore.h"
 #include "kernel/sched.h"
-#include "kernel/irq.h"
 
 void sem_init(semaphore_t *sem, int count) {
     sem->count = count;
@@ -14,18 +13,14 @@ void sem_wait(semaphore_t *sem) {
     int in_list = 0;
 
     while (1) {
-        // Disable IRQs before acquiring the lock to prevent a UART IRQ from
-        // firing on this core while the lock is held, which would deadlock if
-        // the IRQ handler calls sem_signal (also needs this lock).
-        disable_irq();
-        spin_lock(&sem->lock);
+        unsigned long flags;
+        spin_lock_irqsave(&sem->lock, &flags);
 
         if (sem->count > 0) {
             sem->count--;
             if (in_list)
                 list_del(&node.entry);
-            spin_unlock(&sem->lock);
-            enable_irq();
+            spin_unlock_irqrestore(&sem->lock, flags);
             return;
         }
 
@@ -37,15 +32,15 @@ void sem_wait(semaphore_t *sem) {
             in_list = 1;
         }
         get_current_task()->state = TASK_WAITING;
-        spin_unlock(&sem->lock);
-        enable_irq();
+        spin_unlock_irqrestore(&sem->lock, flags);
 
         schedule(); // yields; returns when state is TASK_RUNNING again
     }
 }
 
 void sem_signal(semaphore_t *sem) {
-    spin_lock(&sem->lock);
+    unsigned long flags;
+    spin_lock_irqsave(&sem->lock, &flags);
     sem->count++;
     // Find the first waiter that is still TASK_WAITING and wake it.
     // Waiters already set to TASK_RUNNING (woken by a prior signal but not
@@ -59,5 +54,5 @@ void sem_signal(semaphore_t *sem) {
             break;
         }
     }
-    spin_unlock(&sem->lock);
+    spin_unlock_irqrestore(&sem->lock, flags);
 }

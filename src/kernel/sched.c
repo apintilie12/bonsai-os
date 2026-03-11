@@ -57,9 +57,10 @@ void sched_init_secondary(int cpu_id)
 }
 
 void add_task(TASK_STRUCT *task) {
-	spin_lock(&sched_lock);
+	unsigned long flags;
+	spin_lock_irqsave(&sched_lock, &flags);
 	list_add_tail(&global_all_threads_list, &task->all_threads_list);
-	spin_unlock(&sched_lock);
+	spin_unlock_irqrestore(&sched_lock, flags);
 }
 
 void preempt_disable(void)
@@ -82,7 +83,8 @@ void _schedule(void)
 	TASK_STRUCT *p;
 	TASK_STRUCT *current = get_current_task();
 	int cpu_id = get_cpu_info()->cpu_id;
-	spin_lock(&sched_lock);
+	unsigned long flags;
+	spin_lock_irqsave(&sched_lock, &flags);
 	while (1) {
 		c = -1;
 		next = 0;
@@ -102,12 +104,11 @@ void _schedule(void)
 		}
 	}
 	if (next && next != current) {
-		// current->on_cpu = -1;
 		next->on_cpu = cpu_id;
 	} else {
 		next = 0;
 	}
-	spin_unlock(&sched_lock);
+	spin_unlock_irqrestore(&sched_lock, flags);
 	if (next) {
 		switch_to(next);
 	}
@@ -159,14 +160,15 @@ void exit_process(){
 	preempt_disable();
 	TASK_STRUCT *p;
 	TASK_STRUCT *current = get_current_task();
-	spin_lock(&sched_lock);
+	unsigned long flags;
+	spin_lock_irqsave(&sched_lock, &flags);
 	LIST_FOR_EACH_ENTRY(p, &global_all_threads_list, all_threads_list) {
 		if (p == current) {
 			p->state = TASK_ZOMBIE;
 			break;
 		}
 	}
-	spin_unlock(&sched_lock);
+	spin_unlock_irqrestore(&sched_lock, flags);
 	preempt_enable();
 	schedule();
 	// If schedule returns, that means that no free tasks are available

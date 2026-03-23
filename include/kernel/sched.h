@@ -1,6 +1,8 @@
 #ifndef _SCHED_H
 #define _SCHED_H
 
+#include <mm/mm.h>
+
 #include "lib/list.h"
 
 #define THREAD_CPU_CONTEXT			0 		// offset of cpu_context in task_struct 
@@ -35,15 +37,11 @@ typedef struct _CPU_CONTEXT {
 
 #define MAX_PROCESS_PAGES			16	
 
-typedef struct _USER_PAGE {
-	unsigned long phys_addr;
-	unsigned long virt_addr;
-} USER_PAGE;
 
 typedef struct _MM_STRUCT {
 	unsigned long pgd;
-	int user_pages_count;
-	USER_PAGE user_pages[MAX_PROCESS_PAGES];
+	int vma_count;
+	VM_AREA vmas[MAX_VMA_COUNT];
 	int kernel_pages_count;
 	unsigned long kernel_pages[MAX_PROCESS_PAGES];
 } MM_STRUCT;

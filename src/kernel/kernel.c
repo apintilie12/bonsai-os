@@ -13,6 +13,7 @@
 #include "tests/test_ring_buf.h"
 #include "tests/test_semaphore.h"
 #include "tests/test_string.h"
+#include "tests/test_vma.h"
 #include "kernel/console.h"
 
 volatile int uart_ready = 0;
@@ -24,6 +25,7 @@ void kernel_process(){
 	test_ring_buf();
 	test_semaphore();
 	test_string();
+	test_vma();
 	init_done = 1;
 	asm volatile("dsb ish" ::: "memory");
 	exit_process();

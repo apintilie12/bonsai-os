@@ -2,7 +2,6 @@
 #define	_MM_H
 
 #include "peripherals/base.h"
-#include "lib/types.h"
 
 #define VA_START 			0xffff000000000000
 
@@ -39,6 +38,8 @@
 
 #ifndef __ASSEMBLER__
 
+#include <stdint.h>
+
 typedef struct _FRAME_DESC {
     uint8_t flags;
     uint8_t refcount;
@@ -54,8 +55,21 @@ typedef struct _MEM_STATS {
     int64_t pagetable;
 } MEM_STATS;
 
+#define VMA_READ        0x01
+#define VMA_WRITE       0x02
+#define VMA_EXEC        0x04
+#define VMA_ANON        0x08
 
-#include "kernel/sched.h"
+#define MAX_VMA_COUNT   16
+
+typedef struct _VM_AREA {
+    uint64_t virt_start;
+    uint64_t virt_end;
+    uint32_t flags;
+}VM_AREA;
+
+typedef struct _TASK_STRUCT TASK_STRUCT;
+typedef struct _MM_STRUCT MM_STRUCT;
 
 unsigned long get_free_page();
 void free_page(unsigned long p);
@@ -66,7 +80,11 @@ void get_mem_stats(MEM_STATS* stats);
 
 int copy_virt_memory(TASK_STRUCT *dst); 
 unsigned long allocate_kernel_page(); 
-unsigned long allocate_user_page(TASK_STRUCT *task, unsigned long va); 
+unsigned long allocate_user_page(TASK_STRUCT *task, unsigned long va);
+
+int vma_add(MM_STRUCT* mm, uint64_t va_start, uint64_t va_end, uint32_t flags);
+VM_AREA* vma_find(MM_STRUCT *mm, uint64_t addr);
+void vma_remove(MM_STRUCT *mm, uint64_t va_start);
 
 extern unsigned long pg_dir;
 

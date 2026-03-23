@@ -2,6 +2,7 @@
 #define	_MM_H
 
 #include "peripherals/base.h"
+#include "lib/types.h"
 
 #define VA_START 			0xffff000000000000
 
@@ -29,7 +30,30 @@
 
 #define PG_DIR_SIZE			(4 * PAGE_SIZE)
 
+#define FRAME_IDX(phys_addr) ((phys_addr - LOW_MEMORY) / PAGE_SIZE)
+
+#define FRAME_FREE          0x00
+#define FRAME_KERNEL        0x01
+#define FRAME_USER          0x02
+#define FRAME_PAGETABLE     0x03
+
 #ifndef __ASSEMBLER__
+
+typedef struct _FRAME_DESC {
+    uint8_t flags;
+    uint8_t refcount;
+    int16_t owner_pid;
+} FRAME_DESC;
+
+typedef struct _MEM_STATS {
+    int64_t total;
+    int64_t used;
+    int64_t free;
+    int64_t kernel;
+    int64_t user;
+    int64_t pagetable;
+} MEM_STATS;
+
 
 #include "kernel/sched.h"
 
@@ -38,7 +62,7 @@ void free_page(unsigned long p);
 void map_page(TASK_STRUCT *task, unsigned long va, unsigned long page);
 void memzero(unsigned long src, unsigned long n);
 void memcpy(unsigned long dst, unsigned long src, unsigned long n);
-void get_mem_stats(unsigned long *total, unsigned long *used);
+void get_mem_stats(MEM_STATS* stats);
 
 int copy_virt_memory(TASK_STRUCT *dst); 
 unsigned long allocate_kernel_page(); 

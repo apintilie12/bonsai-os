@@ -122,13 +122,16 @@ static void cmd_reboot(int argc, char *argv[]) {
 }
 
 static void cmd_mem(int argc, char *argv[]) {
-    unsigned long total, used;
-    get_mem_stats(&total, &used);
-    unsigned long free = total - used;
+    MEM_STATS stats;
+    get_mem_stats(&stats);
     printf("  Page size : %d B\r\n", PAGE_SIZE);
-    printf("  Total     : "); pad_int(total, 0); printf(" pages ("); pad_int((total * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
-    printf("  Used      : "); pad_int(used,  0); printf(" pages ("); pad_int((used  * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
-    printf("  Free      : "); pad_int(free,  0); printf(" pages ("); pad_int((free  * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
+    printf("  Total     : "); pad_int(stats.total, 0); printf(" pages ("); pad_int((stats.total * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
+    printf("  Used      : "); pad_int(stats.used,  0); printf(" pages ("); pad_int((stats.used  * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
+    printf("  Free      : "); pad_int(stats.free,  0); printf(" pages ("); pad_int((stats.free  * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
+    printf("  Kernel    : "); pad_int(stats.kernel, 0); printf(" pages ("); pad_int((stats.kernel * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
+    printf("  User      : "); pad_int(stats.user, 0); printf(" pages ("); pad_int((stats.user * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
+    printf("  Pagetable : "); pad_int(stats.pagetable, 0); printf(" pages ("); pad_int((stats.pagetable * PAGE_SIZE) / 1024, 0); printf(" KB)\r\n");
+
 }
 
 void console_init(void) {

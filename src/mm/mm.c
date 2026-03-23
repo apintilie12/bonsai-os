@@ -4,18 +4,36 @@
 #include "lib/spinlock.h"
 #include "lib/errno.h"
 
-static unsigned short mem_map [ PAGING_PAGES ] = {0,};
+static FRAME_DESC mem_map[PAGING_PAGES] = {0,};
 static spinlock_t mem_map_lock = SPINLOCK_INIT;
 
-void get_mem_stats(unsigned long *total, unsigned long *used) {
-	*total = PAGING_PAGES;
-	unsigned long count = 0;
+void get_mem_stats(MEM_STATS* stats) {
+	stats->total = PAGING_PAGES;
+	int64_t count_kernel = 0;
+	int64_t count_user = 0;
+	int64_t count_pagetable = 0;
 	spin_lock(&mem_map_lock);
 	for (unsigned long i = 0; i < PAGING_PAGES; i++) {
-		if (mem_map[i]) count++;
+		switch (mem_map[i].flags) {
+			case FRAME_KERNEL:
+				count_kernel++;
+				break;
+			case FRAME_USER:
+				count_user++;
+				break;
+			case FRAME_PAGETABLE:
+				count_pagetable++;
+				break;
+			default:
+				break;
+		}
 	}
 	spin_unlock(&mem_map_lock);
-	*used = count;
+	stats->kernel = count_kernel;
+	stats->user = count_user;
+	stats->pagetable = count_pagetable;
+	stats->used = count_kernel + count_user + count_pagetable;
+	stats->free = stats->total - stats->used;
 }
 
 unsigned long allocate_kernel_page() {
@@ -31,6 +49,11 @@ unsigned long allocate_user_page(TASK_STRUCT *task, unsigned long va) {
 	if (page == 0) {
 		return 0;
 	}
+
+	spin_lock(&mem_map_lock);
+	mem_map[FRAME_IDX(page)].flags = FRAME_USER;
+	spin_unlock(&mem_map_lock);
+
 	map_page(task, va, page);
 	return page + VA_START;
 }
@@ -39,8 +62,10 @@ unsigned long get_free_page()
 {
 	spin_lock(&mem_map_lock);
 	for (int i = 0; i < PAGING_PAGES; i++){
-		if (mem_map[i] == 0){
-			mem_map[i] = 1;
+		if (mem_map[i].flags == FRAME_FREE){
+			mem_map[i].flags = FRAME_KERNEL;
+			mem_map[i].refcount = 1;
+			mem_map[i].owner_pid = -1;
 			spin_unlock(&mem_map_lock);
 			unsigned long page = LOW_MEMORY + i*PAGE_SIZE;
 			memzero(page + VA_START, PAGE_SIZE);
@@ -53,7 +78,10 @@ unsigned long get_free_page()
 
 void free_page(unsigned long p){
 	spin_lock(&mem_map_lock);
-	mem_map[(p - LOW_MEMORY) / PAGE_SIZE] = 0;
+	int idx = FRAME_IDX(p);
+	mem_map[idx].flags = FRAME_FREE;
+	mem_map[idx].refcount = 0;
+	mem_map[idx].owner_pid = -1;
 	spin_unlock(&mem_map_lock);
 }
 
@@ -70,6 +98,9 @@ unsigned long map_table(unsigned long *table, unsigned long shift, unsigned long
 	if (!table[index]){
 		*new_table = 1;
 		unsigned long next_level_table = get_free_page();
+		spin_lock(&mem_map_lock);
+		mem_map[FRAME_IDX(next_level_table)].flags = FRAME_PAGETABLE;
+		spin_unlock(&mem_map_lock);
 		unsigned long entry = next_level_table | MM_TYPE_PAGE_TABLE;
 		table[index] = entry;
 		return next_level_table;

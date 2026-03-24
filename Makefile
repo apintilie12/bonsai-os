@@ -14,7 +14,7 @@ clean:
 ARCH_S   = $(wildcard src/arch/aarch64/*.S)
 KERNEL_C = $(wildcard src/kernel/*.c)
 MM_C     = $(wildcard src/mm/*.c)
-DRIVER_C = $(wildcard src/drivers/serial/*.c) $(wildcard src/drivers/timer/*.c)
+DRIVER_C = $(wildcard src/drivers/serial/*.c) $(wildcard src/drivers/timer/*.c) $(wildcard src/drivers/sd/*.c)
 LIB_C    = $(wildcard src/lib/*.c)
 TEST_C   = $(wildcard src/tests/*.c)
 

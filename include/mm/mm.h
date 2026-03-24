@@ -72,6 +72,7 @@ typedef struct _TASK_STRUCT TASK_STRUCT;
 typedef struct _MM_STRUCT MM_STRUCT;
 
 unsigned long get_free_page();
+unsigned long get_free_pages(int n);
 void free_page(unsigned long p);
 void map_page(TASK_STRUCT *task, unsigned long va, unsigned long page);
 void memzero(unsigned long src, unsigned long n);

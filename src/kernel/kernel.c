@@ -15,7 +15,9 @@
 #include "tests/test_string.h"
 #include "tests/test_vma.h"
 #include "tests/test_bitmap.h"
+#include "tests/test_kmalloc.h"
 #include "kernel/console.h"
+#include "mm/kmalloc.h"
 
 volatile int uart_ready = 0;
 volatile int sched_ready = 0;
@@ -28,6 +30,7 @@ void kernel_process(){
 	test_string();
 	test_vma();
 	test_bitmap();
+	test_kmalloc();
 	init_done = 1;
 	asm volatile("dsb ish" ::: "memory");
 	exit_process();
@@ -65,6 +68,8 @@ void kernel_main()
 	LOG_CORE("Interrupt controller enabled\r\n");
 	enable_irq();
 	LOG_CORE("Interrupts enabled\r\n");
+	kmalloc_init();
+	LOG_CORE("kmalloc initialized\r\n");
 
 	test_spinlock();
 

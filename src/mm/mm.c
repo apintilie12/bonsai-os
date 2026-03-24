@@ -79,6 +79,35 @@ unsigned long get_free_page()
 	return 0;
 }
 
+unsigned long get_free_pages(int n) {
+	spin_lock(&mem_map_lock);
+	int run_start = -1;
+	int run_len   = 0;
+	for (int i = 0; i < PAGING_PAGES; i++) {
+		if (mem_map[i].flags == FRAME_FREE) {
+			if (run_len == 0) run_start = i;
+			run_len++;
+			if (run_len == n) {
+				for (int j = run_start; j < run_start + n; j++) {
+					mem_map[j].flags     = FRAME_KERNEL;
+					mem_map[j].refcount  = 1;
+					mem_map[j].owner_pid = -1;
+				}
+				spin_unlock(&mem_map_lock);
+				unsigned long base = LOW_MEMORY + run_start * PAGE_SIZE;
+				for (int j = 0; j < n; j++) {
+					memzero(base + j * PAGE_SIZE + VA_START, PAGE_SIZE);
+				}
+				return base;
+			}
+		} else {
+			run_len = 0;
+		}
+	}
+	spin_unlock(&mem_map_lock);
+	return 0;
+}
+
 void free_page(unsigned long p){
 	spin_lock(&mem_map_lock);
 	int idx = FRAME_IDX(p);

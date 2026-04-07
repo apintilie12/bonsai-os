@@ -1,4 +1,5 @@
 #include "peripherals/emmc.h"
+#include "drivers/block_dev.h"
 #include "arch/utils.h"
 #include "lib/log.h"
 
@@ -215,6 +216,10 @@ int sd_init(void)
 
 	sd_state.initialized = 1;
 	LOG_DEBUG("SD: init ok — type=%d rca=0x%x\r\n", sd_state.type, sd_state.rca);
+
+	static block_dev_t sd_dev = { .read_block = sd_read_block };
+	blkdev_register(&sd_dev);
+
 	return 0;
 }
 

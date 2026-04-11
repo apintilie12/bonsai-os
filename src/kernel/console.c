@@ -11,6 +11,7 @@
 #include "lib/ring_buf.h"
 #include "kernel/sched.h"
 #include "mm/mm.h"
+#include "fs/fat32.h"
 
 extern volatile int init_done;
 
@@ -121,6 +122,62 @@ static void cmd_reboot(int argc, char *argv[]) {
     reboot();
 }
 
+static fat32_vol_t fs_vol;
+static unsigned int fs_cwd;
+static int fs_mounted = 0;
+static char fs_path[256] = "/";
+
+static int fs_ensure_mounted(void) {
+    if (fs_mounted)
+        return 0;
+    if (fat32_mount(&fs_vol) < 0)
+        return -1;
+    fs_cwd = fs_vol.root_cluster;
+    fs_mounted = 1;
+    return 0;
+}
+
+static void cmd_ls(int argc, char *argv[]) {
+    if (fs_ensure_mounted() < 0) {
+        printf("ls: FAT32 mount failed\r\n");
+        return;
+    }
+    fat32_ls(&fs_vol, fs_cwd);
+}
+
+static void cmd_cd(int argc, char *argv[]) {
+    if (fs_ensure_mounted() < 0) {
+        printf("cd: FAT32 mount failed\r\n");
+        return;
+    }
+    const char *target = (argc > 1) ? argv[1] : "/";
+
+    if (target[0] == '.' && target[1] == '\0')
+        return;  // "cd ." is a no-op
+
+    unsigned int next;
+    if (fat32_cd(&fs_vol, fs_cwd, target, &next) < 0) {
+        printf("cd: not found: %s\r\n", target);
+        return;
+    }
+    fs_cwd = next;
+
+    if (target[0] == '/' && target[1] == '\0') {
+        fs_path[0] = '/'; fs_path[1] = '\0';
+    } else if (target[0] == '.' && target[1] == '.' && target[2] == '\0') {
+        int i = (int)strlen(fs_path) - 1;
+        while (i > 0 && fs_path[i] != '/') i--;
+        fs_path[i == 0 ? 1 : i] = '\0';
+    } else {
+        int plen = (int)strlen(fs_path);
+        if (fs_path[plen - 1] != '/' && plen < 254)
+            fs_path[plen++] = '/';
+        for (int i = 0; target[i] && plen < 254; i++)
+            fs_path[plen++] = toupper(target[i]);
+        fs_path[plen] = '\0';
+    }
+}
+
 static void cmd_mem(int argc, char *argv[]) {
     MEM_STATS stats;
     get_mem_stats(&stats);
@@ -142,6 +199,8 @@ void console_init(void) {
     console_register_cmd("echo",   cmd_echo,   "print arguments to console");
     console_register_cmd("irqs",   cmd_irqs,   "list registered IRQ handlers");
     console_register_cmd("panic",  cmd_panic,  "trigger a test kernel panic");
+    console_register_cmd("ls",     cmd_ls,     "list current directory of SD card");
+    console_register_cmd("cd",     cmd_cd,     "change directory (e.g. cd SUBDIR, cd .., cd /)");
 }
 
 // ----------------------------------------------------------------------------
@@ -259,7 +318,7 @@ void console_task(void) {
     printf("Type 'help' for available commands.\r\n\r\n");
 
     while (1) {
-        printf("\033[32m>\033[0m ");
+        printf("\033[32m%s>\033[0m ", fs_path);
         console_readline(line, CONSOLE_LINE_MAX);
 
         if (line[0] == '\0')

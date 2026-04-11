@@ -15,10 +15,11 @@ ARCH_S   = $(wildcard src/arch/aarch64/*.S)
 KERNEL_C = $(wildcard src/kernel/*.c)
 MM_C     = $(wildcard src/mm/*.c)
 DRIVER_C = $(wildcard src/drivers/serial/*.c) $(wildcard src/drivers/timer/*.c) $(wildcard src/drivers/sd/*.c) $(wildcard src/drivers/*.c)
+FS_C     = $(wildcard src/fs/*.c)
 LIB_C    = $(wildcard src/lib/*.c)
 TEST_C   = $(wildcard src/tests/*.c)
 
-ALL_C = $(KERNEL_C) $(MM_C) $(DRIVER_C) $(LIB_C) $(TEST_C)
+ALL_C = $(KERNEL_C) $(MM_C) $(DRIVER_C) $(FS_C) $(LIB_C) $(TEST_C)
 ALL_S = $(ARCH_S)
 
 # --- Object files ---

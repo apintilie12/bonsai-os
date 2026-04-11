@@ -19,6 +19,7 @@
 #include "kernel/console.h"
 #include "mm/kmalloc.h"
 #include "peripherals/emmc.h"
+#include "fs/fat32.h"
 
 volatile int uart_ready = 0;
 volatile int sched_ready = 0;
@@ -49,29 +50,37 @@ void test_spinlock(void) {
 	LOG_CORE("  Lock released. Test Passed!\r\n");
 }
 
-static void sd_test(void) {
-	unsigned char buf[512];
-
+static void fat32_test(void) {
 	if (sd_init() < 0) {
 		LOG_CORE("SD init failed\r\n");
 		return;
 	}
-	if (sd_read_block(0, buf) < 0) {
-		LOG_CORE("SD read block 0 failed\r\n");
+
+	fat32_vol_t vol;
+	if (fat32_mount(&vol) < 0) {
+		LOG_CORE("FAT32 mount failed\r\n");
+		return;
+	}
+	LOG_CORE("FAT32 mount OK\r\n");
+
+	unsigned int first_cluster, file_size;
+	if (fat32_open(&vol, vol.root_cluster, "START.ELF", &first_cluster, &file_size) < 0) {
+		LOG_CORE("FAT32 open START.ELF failed\r\n");
+		return;
+	}
+	LOG_CORE("START.ELF found: first_cluster=%u size=%u bytes\r\n",
+	         first_cluster, file_size);
+
+	unsigned char buf[16];
+	if (fat32_read(&vol, first_cluster, buf, sizeof(buf)) < 0) {
+		LOG_CORE("FAT32 read failed\r\n");
 		return;
 	}
 
-	LOG_CORE("SD block 0 dump:\r\n");
-	for (int i = 0; i < 512; i++) {
-		printf("%02x ", buf[i]);
-		if ((i & 0xF) == 0xF) printf("\r\n");
-	}
-
-	// Quick sanity: MBR signature at bytes 510-511
-	if (buf[510] == 0x55 && buf[511] == 0xAA)
-		LOG_CORE("MBR signature OK (0x55AA)\r\n");
-	else
-		LOG_CORE("MBR signature BAD (got 0x%02x%02x)\r\n", buf[510], buf[511]);
+	LOG_CORE("First 16 bytes:");
+	for (int i = 0; i < 16; i++)
+		printf(" %02x", buf[i]);
+	printf("\r\n");
 }
 
 void kernel_main()
@@ -105,7 +114,7 @@ void kernel_main()
 	}
 
 	console_init();
-	sd_test();
+	fat32_test();
 	copy_process(PF_KTHREAD, (unsigned long)&console_task, 0, "console");
 
 	LOG_CORE("Entering idle loop\r\n");
